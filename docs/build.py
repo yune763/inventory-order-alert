@@ -17,68 +17,81 @@ CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 # ── 共通の体裁（A4・印刷前提）────────────────────────────────
 CSS = """
-@page { size: A4; margin: 14mm 13mm 15mm; }
+/* A4横向き。図が横長なので、縦より素直に収まる */
+@page { size: A4 landscape; margin: 13mm 14mm; }
 * { box-sizing: border-box; }
 body {
   font-family: "Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
-  color:#1e293b; font-size:10.2pt; line-height:1.75; margin:0;
+  color:#1e293b; font-size:10.1pt; line-height:1.68; margin:0;
   -webkit-print-color-adjust:exact; print-color-adjust:exact;
 }
-.page { page-break-after:always; }
-.page:last-child { page-break-after:auto; }
 
-.cover { border-top:6px solid var(--accent); padding-top:14px; margin-bottom:18px; }
-.eyebrow { font-size:9pt; color:var(--accent); font-weight:700; letter-spacing:.08em; }
-h1 { font-size:20pt; margin:2px 0 6px; letter-spacing:.01em; }
-.lead { color:#475569; font-size:10.5pt; margin:0 0 4px; }
-.meta { margin-top:10px; font-size:8.6pt; color:#94a3b8; }
+/* ── 表紙 ───────────────────────────────────────────── */
+.cover-page { break-after:page; height:184mm; display:flex; flex-direction:column; }
+.cover-band { height:16mm; background:var(--accent); margin:-13mm -14mm 0; }
+.cover-body { flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 6mm; }
+.cover-kind { font-size:10pt; color:var(--accent); font-weight:700; letter-spacing:.24em; }
+.cover-title { font-size:34pt; font-weight:700; letter-spacing:.02em; margin:6px 0 10px; }
+.cover-lead { font-size:13pt; color:#475569; margin:0 0 26px; }
+.cover-for { display:inline-block; border:1px solid var(--accent); color:var(--accent);
+             border-radius:4px; padding:4px 14px; font-size:10.5pt; font-weight:700; }
+.cover-issues { display:flex; gap:10px; margin-top:30px; }
+.cover-issues > div { flex:1; border:1px solid #e2e8f0; border-top:3px solid var(--accent);
+                      border-radius:4px; padding:10px 12px; }
+.cover-issues b { display:block; font-size:11pt; margin-bottom:2px; }
+.cover-issues span { font-size:9pt; color:#64748b; line-height:1.6; }
+.cover-foot { border-top:1px solid #e2e8f0; padding-top:8px; font-size:9pt; color:#94a3b8;
+              display:flex; justify-content:space-between; }
 
-h2 { font-size:13.5pt; margin:22px 0 10px; padding:6px 0 6px 12px;
+/* ── 本文 ───────────────────────────────────────────── */
+/* 本文は流し込み。見出しだけがページ末尾に残らないよう break-after:avoid を効かせ、
+   区切りたいところには .pb（break-before:page）を置く。
+   position:fixed の要素は使わない（2ページ目以降で見出しに重なるため） */
+h2 { font-size:14.5pt; margin:22px 0 10px; padding:6px 0 6px 13px; break-after:avoid;
      border-left:5px solid var(--accent); background:linear-gradient(90deg,#f1f5f9,rgba(255,255,255,0)); }
-.page > h2:first-child { margin-top:0; }
-h3 { font-size:11pt; margin:16px 0 6px; color:#0f172a; }
-p { margin:0 0 9px; }
-ul,ol { margin:0 0 10px; padding-left:1.3em; }
+h3 { font-size:11.2pt; margin:14px 0 6px; color:#0f172a; break-after:avoid; }
+p { margin:0 0 8px; }
+ul,ol { margin:0 0 11px; padding-left:1.3em; }
 li { margin-bottom:3px; }
 
-table { border-collapse:collapse; width:100%; margin:8px 0 14px; font-size:9.1pt; }
+table { border-collapse:collapse; width:100%; margin:7px 0 12px; font-size:9.4pt; break-inside:avoid; }
 th,td { border:1px solid #e2e8f0; padding:5px 8px; text-align:left; vertical-align:top; }
 th { background:#f1f5f9; font-weight:700; color:#334155; }
 td.c,th.c { text-align:center; } td.r,th.r { text-align:right; }
 tbody tr:nth-child(even) { background:#fafbfc; }
 
-code { font-family:"SF Mono",Menlo,monospace; font-size:8.8pt; background:#f1f5f9;
+code { font-family:"SF Mono",Menlo,monospace; font-size:9pt; background:#f1f5f9;
        padding:1px 5px; border-radius:3px; color:#0f172a; }
-pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
-      font-family:"SF Mono",Menlo,monospace; font-size:8.6pt; line-height:1.65; overflow:hidden;
-      margin:8px 0 14px; white-space:pre-wrap; }
+pre { background:#0f172a; color:#e2e8f0; padding:12px 15px; border-radius:5px; break-inside:avoid;
+      font-family:"SF Mono",Menlo,monospace; font-size:9pt; line-height:1.7; margin:8px 0 15px;
+      white-space:pre-wrap; }
 
 .note { border:1px solid #fcd34d; background:#fffbeb; border-left:4px solid #f59e0b;
-        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+        padding:9px 13px; margin:10px 0; font-size:9.6pt; break-inside:avoid; }
 .note b { color:#92400e; }
 .tip  { border:1px solid #bae6fd; background:#f0f9ff; border-left:4px solid #0284c7;
-        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+        padding:9px 13px; margin:10px 0; font-size:9.6pt; break-inside:avoid; }
 .warn { border:1px solid #fecaca; background:#fef2f2; border-left:4px solid #dc2626;
-        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+        padding:9px 13px; margin:10px 0; font-size:9.6pt; break-inside:avoid; }
 
-.fig { margin:14px 0 18px; }
-.fig svg { width:100%; height:auto; display:block; }
-.caption { font-size:8.8pt; color:#64748b; margin-top:5px; }
+/* 図は本文より狭く置く。横向きの紙幅いっぱいに広げると、図の中の字だけ大きくなりすぎる */
+.fig { margin:12px 0 14px; break-inside:avoid; }
+.fig svg { display:block; width:100%; max-width:200mm; height:auto; margin:0 auto; }
+.caption { font-size:9pt; color:#64748b; margin-top:6px; max-width:200mm; }
 .caption b { color:#334155; }
 
-.badge { display:inline-block; border-radius:3px; padding:1px 6px; font-size:8.6pt; font-weight:700; }
-.steps { counter-reset:step; list-style:none; padding:0; margin:10px 0 14px; }
-.steps > li { counter-increment:step; position:relative; padding-left:30px; margin-bottom:9px; }
+.pb { break-before:page; }
+.cover-page + h2, .pb + h2 { margin-top:0; }
+.badge { display:inline-block; border-radius:3px; padding:1px 6px; font-size:9pt; font-weight:700; }
+.steps { counter-reset:step; list-style:none; padding:0; margin:10px 0 15px; }
+.steps > li { counter-increment:step; position:relative; padding-left:31px; margin-bottom:7px; }
 .steps > li::before {
-  content:counter(step); position:absolute; left:0; top:1px;
-  width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff;
-  font-size:9pt; font-weight:700; text-align:center; line-height:20px;
+  content:counter(step); position:absolute; left:0; top:2px;
+  width:21px; height:21px; border-radius:50%; background:var(--accent); color:#fff;
+  font-size:9.5pt; font-weight:700; text-align:center; line-height:21px;
 }
-.cols { display:flex; gap:14px; }
-.cols > * { flex:1; }
-.footer { position:fixed; bottom:-9mm; left:0; right:0; font-size:8pt; color:#94a3b8;
-          display:flex; justify-content:space-between; }
 """
+
 
 ALERT_COLORS = {
     "欠品": ("#b71c1c", "#ffffff"),
@@ -104,18 +117,35 @@ def document(number: str, title: str, lead: str, accent: str, body: str) -> str:
 <title>在庫・発注アラート {number} {title}</title>
 <style>:root {{ --accent: {accent}; }}{CSS}</style>
 </head><body>
-<div class="footer"><span>在庫・発注アラート — {title}</span><span>{number}</span></div>
 {body}
 </body></html>
 """
 
 
-def cover(number: str, title: str, lead: str) -> str:
-    return f"""<div class="cover">
-  <div class="eyebrow">在庫・発注アラート　{number}</div>
-  <h1>{title}</h1>
-  <p class="lead">{lead}</p>
-  <div class="meta">欠品 / 発注漏れ / 過剰在庫 / 在庫精度（棚卸差異）を、在庫数と出荷実績から自動で判定するシステム</div>
+ISSUES = [
+    ("欠品", "気づいたときには在庫が無い"),
+    ("発注漏れ", "発注したつもりが抜けていた"),
+    ("過剰在庫", "置き場と資金が寝ている"),
+    ("在庫精度", "帳簿と現物が合わない"),
+]
+
+
+def cover(number: str, title: str, lead: str, reader: str = "") -> str:
+    """表紙（1ページ目まるごと）。中身は次のページから始まる。"""
+    issues = "".join(f"<div><b>{name}</b><span>{desc}</span></div>" for name, desc in ISSUES)
+    return f"""<div class="cover-page">
+  <div class="cover-band"></div>
+  <div class="cover-body">
+    <div class="cover-kind">在庫・発注アラート　{number}</div>
+    <div class="cover-title">{title}</div>
+    <p class="cover-lead">{lead}</p>
+    <div><span class="cover-for">{reader}</span></div>
+    <div class="cover-issues">{issues}</div>
+  </div>
+  <div class="cover-foot">
+    <span>在庫数と出荷実績から、いつ・何を・いくつ発注すべきかを自動で判定するシステム</span>
+    <span>{title}</span>
+  </div>
 </div>"""
 
 

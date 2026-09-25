@@ -2,78 +2,98 @@
 <html lang="ja"><head><meta charset="utf-8">
 <title>在庫・発注アラート B 操作マニュアル</title>
 <style>:root { --accent: #1d4ed8; }
-@page { size: A4; margin: 14mm 13mm 15mm; }
+/* A4横向き。図が横長なので、縦より素直に収まる */
+@page { size: A4 landscape; margin: 13mm 14mm; }
 * { box-sizing: border-box; }
 body {
   font-family: "Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
-  color:#1e293b; font-size:10.2pt; line-height:1.75; margin:0;
+  color:#1e293b; font-size:10.1pt; line-height:1.68; margin:0;
   -webkit-print-color-adjust:exact; print-color-adjust:exact;
 }
-.page { page-break-after:always; }
-.page:last-child { page-break-after:auto; }
 
-.cover { border-top:6px solid var(--accent); padding-top:14px; margin-bottom:18px; }
-.eyebrow { font-size:9pt; color:var(--accent); font-weight:700; letter-spacing:.08em; }
-h1 { font-size:20pt; margin:2px 0 6px; letter-spacing:.01em; }
-.lead { color:#475569; font-size:10.5pt; margin:0 0 4px; }
-.meta { margin-top:10px; font-size:8.6pt; color:#94a3b8; }
+/* ── 表紙 ───────────────────────────────────────────── */
+.cover-page { break-after:page; height:184mm; display:flex; flex-direction:column; }
+.cover-band { height:16mm; background:var(--accent); margin:-13mm -14mm 0; }
+.cover-body { flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 6mm; }
+.cover-kind { font-size:10pt; color:var(--accent); font-weight:700; letter-spacing:.24em; }
+.cover-title { font-size:34pt; font-weight:700; letter-spacing:.02em; margin:6px 0 10px; }
+.cover-lead { font-size:13pt; color:#475569; margin:0 0 26px; }
+.cover-for { display:inline-block; border:1px solid var(--accent); color:var(--accent);
+             border-radius:4px; padding:4px 14px; font-size:10.5pt; font-weight:700; }
+.cover-issues { display:flex; gap:10px; margin-top:30px; }
+.cover-issues > div { flex:1; border:1px solid #e2e8f0; border-top:3px solid var(--accent);
+                      border-radius:4px; padding:10px 12px; }
+.cover-issues b { display:block; font-size:11pt; margin-bottom:2px; }
+.cover-issues span { font-size:9pt; color:#64748b; line-height:1.6; }
+.cover-foot { border-top:1px solid #e2e8f0; padding-top:8px; font-size:9pt; color:#94a3b8;
+              display:flex; justify-content:space-between; }
 
-h2 { font-size:13.5pt; margin:22px 0 10px; padding:6px 0 6px 12px;
+/* ── 本文 ───────────────────────────────────────────── */
+/* 本文は流し込み。見出しだけがページ末尾に残らないよう break-after:avoid を効かせ、
+   区切りたいところには .pb（break-before:page）を置く。
+   position:fixed の要素は使わない（2ページ目以降で見出しに重なるため） */
+h2 { font-size:14.5pt; margin:22px 0 10px; padding:6px 0 6px 13px; break-after:avoid;
      border-left:5px solid var(--accent); background:linear-gradient(90deg,#f1f5f9,rgba(255,255,255,0)); }
-.page > h2:first-child { margin-top:0; }
-h3 { font-size:11pt; margin:16px 0 6px; color:#0f172a; }
-p { margin:0 0 9px; }
-ul,ol { margin:0 0 10px; padding-left:1.3em; }
+h3 { font-size:11.2pt; margin:14px 0 6px; color:#0f172a; break-after:avoid; }
+p { margin:0 0 8px; }
+ul,ol { margin:0 0 11px; padding-left:1.3em; }
 li { margin-bottom:3px; }
 
-table { border-collapse:collapse; width:100%; margin:8px 0 14px; font-size:9.1pt; }
+table { border-collapse:collapse; width:100%; margin:7px 0 12px; font-size:9.4pt; break-inside:avoid; }
 th,td { border:1px solid #e2e8f0; padding:5px 8px; text-align:left; vertical-align:top; }
 th { background:#f1f5f9; font-weight:700; color:#334155; }
 td.c,th.c { text-align:center; } td.r,th.r { text-align:right; }
 tbody tr:nth-child(even) { background:#fafbfc; }
 
-code { font-family:"SF Mono",Menlo,monospace; font-size:8.8pt; background:#f1f5f9;
+code { font-family:"SF Mono",Menlo,monospace; font-size:9pt; background:#f1f5f9;
        padding:1px 5px; border-radius:3px; color:#0f172a; }
-pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
-      font-family:"SF Mono",Menlo,monospace; font-size:8.6pt; line-height:1.65; overflow:hidden;
-      margin:8px 0 14px; white-space:pre-wrap; }
+pre { background:#0f172a; color:#e2e8f0; padding:12px 15px; border-radius:5px; break-inside:avoid;
+      font-family:"SF Mono",Menlo,monospace; font-size:9pt; line-height:1.7; margin:8px 0 15px;
+      white-space:pre-wrap; }
 
 .note { border:1px solid #fcd34d; background:#fffbeb; border-left:4px solid #f59e0b;
-        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+        padding:9px 13px; margin:10px 0; font-size:9.6pt; break-inside:avoid; }
 .note b { color:#92400e; }
 .tip  { border:1px solid #bae6fd; background:#f0f9ff; border-left:4px solid #0284c7;
-        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+        padding:9px 13px; margin:10px 0; font-size:9.6pt; break-inside:avoid; }
 .warn { border:1px solid #fecaca; background:#fef2f2; border-left:4px solid #dc2626;
-        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+        padding:9px 13px; margin:10px 0; font-size:9.6pt; break-inside:avoid; }
 
-.fig { margin:14px 0 18px; }
-.fig svg { width:100%; height:auto; display:block; }
-.caption { font-size:8.8pt; color:#64748b; margin-top:5px; }
+/* 図は本文より狭く置く。横向きの紙幅いっぱいに広げると、図の中の字だけ大きくなりすぎる */
+.fig { margin:12px 0 14px; break-inside:avoid; }
+.fig svg { display:block; width:100%; max-width:200mm; height:auto; margin:0 auto; }
+.caption { font-size:9pt; color:#64748b; margin-top:6px; max-width:200mm; }
 .caption b { color:#334155; }
 
-.badge { display:inline-block; border-radius:3px; padding:1px 6px; font-size:8.6pt; font-weight:700; }
-.steps { counter-reset:step; list-style:none; padding:0; margin:10px 0 14px; }
-.steps > li { counter-increment:step; position:relative; padding-left:30px; margin-bottom:9px; }
+.pb { break-before:page; }
+.cover-page + h2, .pb + h2 { margin-top:0; }
+.badge { display:inline-block; border-radius:3px; padding:1px 6px; font-size:9pt; font-weight:700; }
+.steps { counter-reset:step; list-style:none; padding:0; margin:10px 0 15px; }
+.steps > li { counter-increment:step; position:relative; padding-left:31px; margin-bottom:7px; }
 .steps > li::before {
-  content:counter(step); position:absolute; left:0; top:1px;
-  width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff;
-  font-size:9pt; font-weight:700; text-align:center; line-height:20px;
+  content:counter(step); position:absolute; left:0; top:2px;
+  width:21px; height:21px; border-radius:50%; background:var(--accent); color:#fff;
+  font-size:9.5pt; font-weight:700; text-align:center; line-height:21px;
 }
-.cols { display:flex; gap:14px; }
-.cols > * { flex:1; }
-.footer { position:fixed; bottom:-9mm; left:0; right:0; font-size:8pt; color:#94a3b8;
-          display:flex; justify-content:space-between; }
 </style>
 </head><body>
-<div class="footer"><span>在庫・発注アラート — 操作マニュアル</span><span>B</span></div>
 
-<div class="page">
-<div class="cover">
-  <div class="eyebrow">在庫・発注アラート　B</div>
-  <h1>操作マニュアル</h1>
-  <p class="lead">毎日の画面の触り方。</p>
-  <div class="meta">欠品 / 発注漏れ / 過剰在庫 / 在庫精度（棚卸差異）を、在庫数と出荷実績から自動で判定するシステム</div>
+<div class="cover-page">
+  <div class="cover-band"></div>
+  <div class="cover-body">
+    <div class="cover-kind">在庫・発注アラート　B</div>
+    <div class="cover-title">操作マニュアル</div>
+    <p class="cover-lead">毎日の画面の触り方。</p>
+    <div><span class="cover-for">操作する側（毎日使う人）向け</span></div>
+    <div class="cover-issues"><div><b>欠品</b><span>気づいたときには在庫が無い</span></div><div><b>発注漏れ</b><span>発注したつもりが抜けていた</span></div><div><b>過剰在庫</b><span>置き場と資金が寝ている</span></div><div><b>在庫精度</b><span>帳簿と現物が合わない</span></div></div>
+  </div>
+  <div class="cover-foot">
+    <span>在庫数と出荷実績から、いつ・何を・いくつ発注すべきかを自動で判定するシステム</span>
+    <span>操作マニュアル</span>
+  </div>
 </div>
+
+<h2>目次</h2>
 
 <table style="margin-top:14px"><tr><td class="c" style="width:12%"><b>1</b></td><td style="width:32%"><b>1日の流れ</b></td><td>朝に見る・その都度入れる・週に1回片付ける</td></tr><tr><td class="c" style="width:12%"><b>2</b></td><td style="width:32%"><b>HOMEを開く</b></td><td>今日どれだけ手を打つ必要があるか</td></tr><tr><td class="c" style="width:12%"><b>3</b></td><td style="width:32%"><b>在庫一覧を使う</b></td><td>絞り込み・並べ替え・列の出し入れ</td></tr><tr><td class="c" style="width:12%"><b>4</b></td><td style="width:32%"><b>対応状況を付ける</b></td><td>発注したら「発注済み」にする</td></tr><tr><td class="c" style="width:12%"><b>5</b></td><td style="width:32%"><b>入出庫を登録する</b></td><td>入庫・出庫・調整の入れ方</td></tr><tr><td class="c" style="width:12%"><b>6</b></td><td style="width:32%"><b>出荷先と入庫元</b></td><td>どこへ出したか・どこから入ったか</td></tr><tr><td class="c" style="width:12%"><b>7</b></td><td style="width:32%"><b>商品を追加する</b></td><td>品番は「採番」ボタンで発番できる</td></tr><tr><td class="c" style="width:12%"><b>8</b></td><td style="width:32%"><b>選択肢を足す</b></td><td>仕入先・保管場所・出荷先の新規登録</td></tr><tr><td class="c" style="width:12%"><b>9</b></td><td style="width:32%"><b>CSVで取り込む</b></td><td>まとめて入れる・書き出す</td></tr><tr><td class="c" style="width:12%"><b>10</b></td><td style="width:32%"><b>困ったとき</b></td><td>よくある質問</td></tr></table>
 
@@ -84,9 +104,7 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
   <tr><td><b>その都度</b></td><td>入庫・出庫があったら登録する</td><td>入出庫</td></tr>
   <tr><td><b>週1回</b></td><td>優先度Cを見る（過剰在庫・滞留在庫・棚卸差異）</td><td>在庫一覧</td></tr>
 </table>
-</div>
-
-<div class="page">
+<div class="pb"></div>
 <h2>2. HOMEを開く</h2>
 <div class="fig">
 <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
@@ -179,9 +197,6 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
       「本日中に 230 発注（リードタイム7日）」のように数量と期限が書かれています。</li>
   <li><b>発注したら対応状況を「発注済み」に変える。</b>一覧のプルダウンからその場で変えられます。</li>
 </ol>
-</div>
-
-<div class="page">
 <h2>3. 在庫一覧を使う</h2>
 <p>旧スプレッドシートと同じ42項目が、同じ並びで入っています。</p>
 
@@ -217,9 +232,7 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
   有効在庫・発注点・アラート区分などは、開くたびに計算し直しているためです。
   変えたいときは、もとになる数字（理論在庫・引当・リードタイムなど）を直します。
 </div>
-</div>
-
-<div class="page">
+<div class="pb"></div>
 <h2>4. 対応状況を付ける</h2>
 <div class="fig">
 <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
@@ -332,9 +345,6 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
 
   <div class="caption"><b>図3</b>　登録するたびに理論在庫が動きます。取り消せば同じだけ戻ります。</div>
 </div>
-</div>
-
-<div class="page">
 <table>
   <tr><th style="width:14%" class="c">区分</th><th style="width:20%">在庫への効き方</th><th>使うとき</th></tr>
   <tr><td class="c"><span class="badge" style="background:#d1fae5;color:#065f46">入庫</span></td>
@@ -345,6 +355,8 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
       <td>符号のとおり（±）</td><td>棚卸で差異が出た／破損・紛失を反映する</td></tr>
 </table>
 
+<div class="pb"></div>
+<h3>登録の手順</h3>
 <ol class="steps">
   <li><b>「入出庫」を開く。</b>（商品の明細画面からでも同じフォームが使えます）</li>
   <li><b>商品を探す。</b>品番でも商品名でも型番でも、一部を打てば候補が出ます。
@@ -372,9 +384,7 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
   「入出庫」画面と「出荷先」画面に、<b>直近30日でどこへいくつ出たか</b>が数量・件数・金額で出ます。
   「明細」を押すと、その出荷先の出庫だけに絞った履歴が開きます。
 </p>
-</div>
-
-<div class="page">
+<div class="pb"></div>
 <h2>7. 商品を追加する</h2>
 <ol class="steps">
   <li>「在庫一覧」→ 右上の<b>「商品を追加」</b></li>
@@ -411,9 +421,7 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
   <tr><td>商品CSV</td><td>商品コード / 商品名</td><td>その行だけ飛ばして取り込む</td></tr>
   <tr><td>入出庫CSV</td><td>日付 / 区分 / 商品コード / 数量</td><td><b>1件も取り込まない</b>（在庫が合わなくなるため）</td></tr>
 </table>
-</div>
-
-<div class="page">
+<div class="pb"></div>
 <h2>10. 困ったとき</h2>
 
 <h3>発注したのにアラートが消えない</h3>
@@ -451,6 +459,5 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
 
 <h3>ID・パスワードを聞かれる</h3>
 <p>URLを開いた時点で出る入口の鍵です。管理者に確認してください。</p>
-</div>
 
 </body></html>

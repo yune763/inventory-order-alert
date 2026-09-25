@@ -38,8 +38,9 @@ def toc(items):
 def doc_guide(cover, badge):
     ladder = _ladder_svg(__import__("build").ALERT_COLORS)
     return f"""
-<div class="page">
-{cover("A", "システム解説", "何をするシステムで、どう判定し、どう設定するか。")}
+{cover("A", "システム解説", "何をするシステムで、どう判定し、どう設定するか。", "説明する側（導入を説明する人・管理する人）向け")}
+
+<h2>目次</h2>
 
 {toc([
   ("1", "何を解決するか", "欠品 / 発注漏れ / 過剰在庫 / 在庫精度の4つ"),
@@ -69,9 +70,6 @@ def doc_guide(cover, badge):
   <tr><td><b>在庫精度</b></td><td>帳簿と現物が合わない</td>
       <td>{badge("棚卸差異")} が優先度Cで出る</td></tr>
 </table>
-</div>
-
-<div class="page">
 <h2>2. 全体の流れ</h2>
 <div class="fig">{FLOW_SVG}
   <div class="caption"><b>図1</b>　入力から対応まで。②〜⑤は毎回その場で計算するので、
@@ -88,9 +86,6 @@ def doc_guide(cover, badge):
 <div class="fig">{SCREEN_MAP_SVG}
   <div class="caption"><b>図2</b>　上部メニューの並びと役割。毎日触るのは左の3つだけです。</div>
 </div>
-</div>
-
-<div class="page">
 <h2>4. 運用サイクル</h2>
 <table>
   <tr><th style="width:14%">頻度</th><th style="width:44%">やること</th><th>使う画面</th></tr>
@@ -107,6 +102,7 @@ def doc_guide(cover, badge):
       <td>商品編集／判定パラメータ</td></tr>
 </table>
 
+<div class="pb"></div>
 <h2>5. 在庫はこう動く</h2>
 <p>在庫は出荷のぶんだけ毎日減り、入荷でまた増えます。このノコギリの形のどこにいるかで、発注すべきかが決まります。</p>
 <div class="fig">{STOCK_CURVE_SVG}
@@ -121,9 +117,6 @@ def doc_guide(cover, badge):
       <td>割ると {badge("発注推奨")}</td></tr>
   <tr><td><b>安全在庫</b></td><td>納期の遅れや急な注文に備える分</td><td>ここを割ると危険水域</td></tr>
 </table>
-</div>
-
-<div class="page">
 <h2>6. 計算式</h2>
 <pre>有効在庫       = (実棚在庫 があれば実棚 / 無ければ理論在庫) − 引当数
 在庫ポジション  = 有効在庫 + 発注残数        ← 発注判定はこの値で行う
@@ -150,9 +143,7 @@ def doc_guide(cover, badge):
   <tr><td>最小発注数(MOQ)</td><td>発注推奨数の下限</td></tr>
   <tr><td>発注ロット単位</td><td>ケース入数など。発注推奨数はこの倍数に切り上がる</td></tr>
 </table>
-</div>
-
-<div class="page">
+<div class="pb"></div>
 <h2>7. アラート8区分</h2>
 <p>8つの条件を<b>重い順</b>に見て、最初に当たった1つだけを表示します。1つの商品に2つ付くことはありません。</p>
 <div class="fig">{ladder}
@@ -167,9 +158,6 @@ def doc_guide(cover, badge):
   <tr><td class="c"><span class="badge" style="background:#d8e6f4;color:#1c4587">C:要確認</span></td>
       <td>すぐ欠品はしないが、在庫が傷んでいる</td><td>週に1回まとめて</td></tr>
 </table>
-</div>
-
-<div class="page">
 <h2>8. 設定できること</h2>
 <h3>判定パラメータ（全商品に共通）</h3>
 <table>
@@ -207,14 +195,12 @@ def doc_guide(cover, badge):
   一覧に使用件数を出しているので、0件のものだけ削除でき、使用中は「非表示」で運用から外します。
 </div>
 
-</div>
-
-<div class="page">
 <h3>品番（商品コード）の採番</h3>
 <div class="fig">{NUMBERING_SVG}
   <div class="caption"><b>図5</b>　カテゴリごとに「接頭辞＋連番」を決めておくと、新規登録時に発番できます。</div>
 </div>
 
+<div class="pb"></div>
 <h2>9. データの入れ方</h2>
 <div class="fig">{MIGRATION_SVG}
   <div class="caption"><b>図6</b>　旧スプレッドシートからの移行。書き出してそのまま取り込むだけです。</div>
@@ -224,9 +210,6 @@ def doc_guide(cover, badge):
   必須は<b>「商品コード」と「商品名」</b>の2つだけで、並び順は問いません。
 </p>
 
-</div>
-
-<div class="page">
 <h3>毎日のデータは部分更新で入れられる</h3>
 <div class="fig">{PARTIAL_SVG}
   <div class="caption"><b>図7</b>　CSVに載っていない列は現在値のまま。だから毎日の販売データを部分更新で流せます。</div>
@@ -237,9 +220,7 @@ def doc_guide(cover, badge):
   <div class="caption"><b>図8</b>　出庫を1件でも登録した商品は、期間出庫数を台帳から自動集計します。
   商品ごとに切り替わるので、全商品を一度に揃える必要はありません。</div>
 </div>
-</div>
-
-<div class="page">
+<div class="pb"></div>
 <h2>10. 運用上の注意</h2>
 
 <h3>判定は保存していない</h3>
@@ -276,7 +257,6 @@ def doc_guide(cover, badge):
   ③1〜2週間そのまま運用してアラートの出方を見る → ④多すぎる／少なすぎる区分があれば
   判定パラメータか商品ごとのリードタイム・安全在庫日数を調整、の順が安全です。
 </div>
-</div>
 """
 
 
@@ -286,8 +266,9 @@ def doc_guide(cover, badge):
 
 def doc_manual(cover, badge):
     return f"""
-<div class="page">
-{cover("B", "操作マニュアル", "毎日の画面の触り方。")}
+{cover("B", "操作マニュアル", "毎日の画面の触り方。", "操作する側（毎日使う人）向け")}
+
+<h2>目次</h2>
 
 {toc([
   ("1", "1日の流れ", "朝に見る・その都度入れる・週に1回片付ける"),
@@ -309,9 +290,7 @@ def doc_manual(cover, badge):
   <tr><td><b>その都度</b></td><td>入庫・出庫があったら登録する</td><td>入出庫</td></tr>
   <tr><td><b>週1回</b></td><td>優先度Cを見る（過剰在庫・滞留在庫・棚卸差異）</td><td>在庫一覧</td></tr>
 </table>
-</div>
-
-<div class="page">
+<div class="pb"></div>
 <h2>2. HOMEを開く</h2>
 <div class="fig">{HOME_SVG}
   <div class="caption"><b>図1</b>　上の件数 → 区分の内訳 → 要対応リスト、の順に見ます。</div>
@@ -322,9 +301,6 @@ def doc_manual(cover, badge):
       「本日中に 230 発注（リードタイム7日）」のように数量と期限が書かれています。</li>
   <li><b>発注したら対応状況を「発注済み」に変える。</b>一覧のプルダウンからその場で変えられます。</li>
 </ol>
-</div>
-
-<div class="page">
 <h2>3. 在庫一覧を使う</h2>
 <p>旧スプレッドシートと同じ42項目が、同じ並びで入っています。</p>
 
@@ -360,9 +336,7 @@ def doc_manual(cover, badge):
   有効在庫・発注点・アラート区分などは、開くたびに計算し直しているためです。
   変えたいときは、もとになる数字（理論在庫・引当・リードタイムなど）を直します。
 </div>
-</div>
-
-<div class="page">
+<div class="pb"></div>
 <h2>4. 対応状況を付ける</h2>
 <div class="fig">{STATUS_FLOW_SVG}
   <div class="caption"><b>図2</b>　対応状況の流れ。人が選ぶ列で、計算で書き換わることはありません。</div>
@@ -386,9 +360,6 @@ def doc_manual(cover, badge):
 <div class="fig">{LEDGER_SVG}
   <div class="caption"><b>図3</b>　登録するたびに理論在庫が動きます。取り消せば同じだけ戻ります。</div>
 </div>
-</div>
-
-<div class="page">
 <table>
   <tr><th style="width:14%" class="c">区分</th><th style="width:20%">在庫への効き方</th><th>使うとき</th></tr>
   <tr><td class="c"><span class="badge" style="background:#d1fae5;color:#065f46">入庫</span></td>
@@ -399,6 +370,8 @@ def doc_manual(cover, badge):
       <td>符号のとおり（±）</td><td>棚卸で差異が出た／破損・紛失を反映する</td></tr>
 </table>
 
+<div class="pb"></div>
+<h3>登録の手順</h3>
 <ol class="steps">
   <li><b>「入出庫」を開く。</b>（商品の明細画面からでも同じフォームが使えます）</li>
   <li><b>商品を探す。</b>品番でも商品名でも型番でも、一部を打てば候補が出ます。
@@ -426,9 +399,7 @@ def doc_manual(cover, badge):
   「入出庫」画面と「出荷先」画面に、<b>直近30日でどこへいくつ出たか</b>が数量・件数・金額で出ます。
   「明細」を押すと、その出荷先の出庫だけに絞った履歴が開きます。
 </p>
-</div>
-
-<div class="page">
+<div class="pb"></div>
 <h2>7. 商品を追加する</h2>
 <ol class="steps">
   <li>「在庫一覧」→ 右上の<b>「商品を追加」</b></li>
@@ -465,9 +436,7 @@ def doc_manual(cover, badge):
   <tr><td>商品CSV</td><td>商品コード / 商品名</td><td>その行だけ飛ばして取り込む</td></tr>
   <tr><td>入出庫CSV</td><td>日付 / 区分 / 商品コード / 数量</td><td><b>1件も取り込まない</b>（在庫が合わなくなるため）</td></tr>
 </table>
-</div>
-
-<div class="page">
+<div class="pb"></div>
 <h2>10. 困ったとき</h2>
 
 <h3>発注したのにアラートが消えない</h3>
@@ -505,5 +474,4 @@ def doc_manual(cover, badge):
 
 <h3>ID・パスワードを聞かれる</h3>
 <p>URLを開いた時点で出る入口の鍵です。管理者に確認してください。</p>
-</div>
 """
