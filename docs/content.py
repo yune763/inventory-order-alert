@@ -266,7 +266,7 @@ def doc_guide(cover, badge):
 
 def doc_manual(cover, badge):
     return f"""
-{cover("B", "操作マニュアル", "毎日の画面の触り方。", "操作する側（毎日使う人）向け")}
+{cover("B", "操作マニュアル", "毎日の画面の触り方。")}
 
 <h2>目次</h2>
 

@@ -133,13 +133,15 @@ ISSUES = [
 def cover(number: str, title: str, lead: str, reader: str = "") -> str:
     """表紙（1ページ目まるごと）。中身は次のページから始まる。"""
     issues = "".join(f"<div><b>{name}</b><span>{desc}</span></div>" for name, desc in ISSUES)
+    # 読む人の表記は入れないこともある（空なら枠ごと出さない）
+    reader_block = f'<div><span class="cover-for">{reader}</span></div>' if reader else ""
     return f"""<div class="cover-page">
   <div class="cover-band"></div>
   <div class="cover-body">
     <div class="cover-kind">在庫・発注アラート　{number}</div>
     <div class="cover-title">{title}</div>
     <p class="cover-lead">{lead}</p>
-    <div><span class="cover-for">{reader}</span></div>
+    {reader_block}
     <div class="cover-issues">{issues}</div>
   </div>
   <div class="cover-foot">
