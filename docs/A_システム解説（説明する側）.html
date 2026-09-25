@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>在庫・発注アラート A システム解説</title>
+<style>:root { --accent: #0f766e; }
+@page { size: A4; margin: 14mm 13mm 15mm; }
+* { box-sizing: border-box; }
+body {
+  font-family: "Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  color:#1e293b; font-size:10.2pt; line-height:1.75; margin:0;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+.page { page-break-after:always; }
+.page:last-child { page-break-after:auto; }
+
+.cover { border-top:6px solid var(--accent); padding-top:14px; margin-bottom:18px; }
+.eyebrow { font-size:9pt; color:var(--accent); font-weight:700; letter-spacing:.08em; }
+h1 { font-size:20pt; margin:2px 0 6px; letter-spacing:.01em; }
+.lead { color:#475569; font-size:10.5pt; margin:0 0 4px; }
+.meta { margin-top:10px; font-size:8.6pt; color:#94a3b8; }
+
+h2 { font-size:13.5pt; margin:22px 0 10px; padding:6px 0 6px 12px;
+     border-left:5px solid var(--accent); background:linear-gradient(90deg,#f1f5f9,rgba(255,255,255,0)); }
+.page > h2:first-child { margin-top:0; }
+h3 { font-size:11pt; margin:16px 0 6px; color:#0f172a; }
+p { margin:0 0 9px; }
+ul,ol { margin:0 0 10px; padding-left:1.3em; }
+li { margin-bottom:3px; }
+
+table { border-collapse:collapse; width:100%; margin:8px 0 14px; font-size:9.1pt; }
+th,td { border:1px solid #e2e8f0; padding:5px 8px; text-align:left; vertical-align:top; }
+th { background:#f1f5f9; font-weight:700; color:#334155; }
+td.c,th.c { text-align:center; } td.r,th.r { text-align:right; }
+tbody tr:nth-child(even) { background:#fafbfc; }
+
+code { font-family:"SF Mono",Menlo,monospace; font-size:8.8pt; background:#f1f5f9;
+       padding:1px 5px; border-radius:3px; color:#0f172a; }
+pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
+      font-family:"SF Mono",Menlo,monospace; font-size:8.6pt; line-height:1.65; overflow:hidden;
+      margin:8px 0 14px; white-space:pre-wrap; }
+
+.note { border:1px solid #fcd34d; background:#fffbeb; border-left:4px solid #f59e0b;
+        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+.note b { color:#92400e; }
+.tip  { border:1px solid #bae6fd; background:#f0f9ff; border-left:4px solid #0284c7;
+        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+.warn { border:1px solid #fecaca; background:#fef2f2; border-left:4px solid #dc2626;
+        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+
+.fig { margin:14px 0 18px; }
+.fig svg { width:100%; height:auto; display:block; }
+.caption { font-size:8.8pt; color:#64748b; margin-top:5px; }
+.caption b { color:#334155; }
+
+.badge { display:inline-block; border-radius:3px; padding:1px 6px; font-size:8.6pt; font-weight:700; }
+.steps { counter-reset:step; list-style:none; padding:0; margin:10px 0 14px; }
+.steps > li { counter-increment:step; position:relative; padding-left:30px; margin-bottom:9px; }
+.steps > li::before {
+  content:counter(step); position:absolute; left:0; top:1px;
+  width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff;
+  font-size:9pt; font-weight:700; text-align:center; line-height:20px;
+}
+.cols { display:flex; gap:14px; }
+.cols > * { flex:1; }
+.footer { position:fixed; bottom:-9mm; left:0; right:0; font-size:8pt; color:#94a3b8;
+          display:flex; justify-content:space-between; }
+</style>
+</head><body>
+<div class="footer"><span>在庫・発注アラート — システム解説</span><span>A</span></div>
+
+<div class="page">
+<div class="cover">
+  <div class="eyebrow">在庫・発注アラート　A</div>
+  <h1>システム解説</h1>
+  <p class="lead">何をするシステムで、どう判定し、どう設定するか。</p>
+  <div class="meta">欠品 / 発注漏れ / 過剰在庫 / 在庫精度（棚卸差異）を、在庫数と出荷実績から自動で判定するシステム</div>
+</div>
+
+<table style="margin-top:14px"><tr><td class="c" style="width:12%"><b>1</b></td><td style="width:32%"><b>何を解決するか</b></td><td>欠品 / 発注漏れ / 過剰在庫 / 在庫精度の4つ</td></tr><tr><td class="c" style="width:12%"><b>2</b></td><td style="width:32%"><b>全体の流れ</b></td><td>入力から対応まで。どこまでが機械で、どこからが人か</td></tr><tr><td class="c" style="width:12%"><b>3</b></td><td style="width:32%"><b>画面の構成</b></td><td>9画面の役割と、毎日触る範囲</td></tr><tr><td class="c" style="width:12%"><b>4</b></td><td style="width:32%"><b>運用サイクル</b></td><td>毎日・週次・月次に何をするか</td></tr><tr><td class="c" style="width:12%"><b>5</b></td><td style="width:32%"><b>在庫はこう動く</b></td><td>発注点・安全在庫・適正在庫上限の意味</td></tr><tr><td class="c" style="width:12%"><b>6</b></td><td style="width:32%"><b>計算式</b></td><td>何をどう計算しているか</td></tr><tr><td class="c" style="width:12%"><b>7</b></td><td style="width:32%"><b>アラート8区分</b></td><td>判定の順序と優先度</td></tr><tr><td class="c" style="width:12%"><b>8</b></td><td style="width:32%"><b>設定できること</b></td><td>マスタ・判定パラメータ・品番の採番</td></tr><tr><td class="c" style="width:12%"><b>9</b></td><td style="width:32%"><b>データの入れ方</b></td><td>旧シートからの移行と、毎日の取込</td></tr><tr><td class="c" style="width:12%"><b>10</b></td><td style="width:32%"><b>運用上の注意</b></td><td>公開URL・スリープ・バックアップ</td></tr></table>
+
+<h2>1. 何を解決するか</h2>
+<p>
+  商品ごとの在庫数と直近の出荷実績から、<b>いつ・何を・いくつ発注すべきか</b>を自動で判定します。
+</p>
+<table>
+  <tr><th style="width:20%">課題</th><th>起きていたこと</th><th style="width:34%">このシステムでの見え方</th></tr>
+  <tr><td><b>欠品</b></td><td>気づいたときには在庫が無く、納期を落とす</td>
+      <td><span class="badge" style="background:#b71c1c;color:#ffffff">欠品</span> <span class="badge" style="background:#ef6c00;color:#ffffff">欠品リスク</span> が優先度Aで出る</td></tr>
+  <tr><td><b>発注漏れ</b></td><td>発注したつもりが抜けていた</td>
+      <td><span class="badge" style="background:#d32f2f;color:#ffffff">発注漏れ</span> が優先度Aで出る（行ごと赤くなる）</td></tr>
+  <tr><td><b>過剰在庫</b></td><td>置き場と資金が在庫に寝ている</td>
+      <td><span class="badge" style="background:#0277bd;color:#ffffff">過剰在庫</span> <span class="badge" style="background:#455a64;color:#ffffff">滞留在庫</span> が優先度Cで出る</td></tr>
+  <tr><td><b>在庫精度</b></td><td>帳簿と現物が合わない</td>
+      <td><span class="badge" style="background:#5d4037;color:#ffffff">棚卸差異</span> が優先度Cで出る</td></tr>
+</table>
+</div>
+
+<div class="page">
+<h2>2. 全体の流れ</h2>
+<div class="fig">
+<svg viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <g font-size="10">
+    <!-- 1 入れる -->
+    <rect x="4" y="34" width="104" height="70" rx="6" fill="#ecfeff" stroke="#0891b2"/>
+    <text x="56" y="55" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0e7490">① 入れる</text>
+    <text x="56" y="72" text-anchor="middle" fill="#334155">画面入力</text>
+    <text x="56" y="86" text-anchor="middle" fill="#334155">CSV取込</text>
+    <text x="56" y="100" text-anchor="middle" fill="#334155">入出庫</text>
+    <!-- 2 在庫 -->
+    <rect x="124" y="34" width="104" height="70" rx="6" fill="#f8fafc" stroke="#94a3b8"/>
+    <text x="176" y="55" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">② 在庫</text>
+    <text x="176" y="72" text-anchor="middle" fill="#334155">理論／実棚</text>
+    <text x="176" y="86" text-anchor="middle" fill="#334155">− 引当</text>
+    <text x="176" y="100" text-anchor="middle" font-weight="700" fill="#0f172a">＝有効在庫</text>
+    <!-- 3 消化 -->
+    <rect x="244" y="34" width="104" height="70" rx="6" fill="#f8fafc" stroke="#94a3b8"/>
+    <text x="296" y="55" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">③ 消化</text>
+    <text x="296" y="72" text-anchor="middle" fill="#334155">直近30日の</text>
+    <text x="296" y="86" text-anchor="middle" fill="#334155">出庫 ÷ 30</text>
+    <text x="296" y="100" text-anchor="middle" font-weight="700" fill="#0f172a">＝日次出庫</text>
+    <!-- 4 閾値 -->
+    <rect x="364" y="34" width="104" height="70" rx="6" fill="#f8fafc" stroke="#94a3b8"/>
+    <text x="416" y="55" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">④ 閾値</text>
+    <text x="416" y="72" text-anchor="middle" fill="#334155">安全在庫</text>
+    <text x="416" y="86" text-anchor="middle" fill="#334155">発注点</text>
+    <text x="416" y="100" text-anchor="middle" fill="#334155">適正在庫上限</text>
+    <!-- 5 判定 -->
+    <rect x="484" y="34" width="104" height="70" rx="6" fill="#fef2f2" stroke="#dc2626"/>
+    <text x="536" y="55" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b91c1c">⑤ 判定</text>
+    <text x="536" y="72" text-anchor="middle" fill="#334155">アラート8区分</text>
+    <text x="536" y="86" text-anchor="middle" fill="#334155">優先度 A/B/C</text>
+    <text x="536" y="100" text-anchor="middle" fill="#334155">発注推奨数</text>
+    <!-- 6 人 -->
+    <rect x="604" y="34" width="112" height="70" rx="6" fill="#eef2ff" stroke="#4338ca"/>
+    <text x="660" y="55" text-anchor="middle" font-size="10.5" font-weight="700" fill="#3730a3">⑥ 人が決める</text>
+    <text x="660" y="72" text-anchor="middle" fill="#334155">発注する</text>
+    <text x="660" y="86" text-anchor="middle" fill="#334155">対応状況を</text>
+    <text x="660" y="100" text-anchor="middle" fill="#334155">「発注済み」に</text>
+
+    <g stroke="#94a3b8" stroke-width="1.4" marker-end="url(#ar)">
+      <line x1="110" y1="69" x2="121" y2="69"/>
+      <line x1="230" y1="69" x2="241" y2="69"/>
+      <line x1="350" y1="69" x2="361" y2="69"/>
+      <line x1="470" y1="69" x2="481" y2="69"/>
+      <line x1="590" y1="69" x2="601" y2="69"/>
+    </g>
+
+    <rect x="124" y="126" width="464" height="30" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-dasharray="4 3"/>
+    <text x="356" y="145" text-anchor="middle" font-size="9.5" fill="#475569">
+      ②〜⑤は画面を開くたびに計算し直す（保存しない）＝ 数字を直せば判定もその場で変わる
+    </text>
+    <rect x="604" y="126" width="112" height="30" rx="4" fill="#eef2ff" stroke="#c7d2fe"/>
+    <text x="660" y="145" text-anchor="middle" font-size="9.5" fill="#3730a3">⑥だけが人の仕事</text>
+
+    <text x="4" y="182" font-size="9.5" fill="#64748b">
+      機械はアラートを出すだけ。「発注漏れ」と出ていても、対応状況が「発注済み」なら手当て済みとして扱う。
+    </text>
+    <text x="4" y="198" font-size="9.5" fill="#64748b">
+      この2列（アラート区分と対応状況）の並びが、運用の軸になる。
+    </text>
+  </g>
+</svg>
+
+  <div class="caption"><b>図1</b>　入力から対応まで。②〜⑤は毎回その場で計算するので、
+  「再計算ボタン」を押す必要がありません。在庫数を直した瞬間に判定が変わります。</div>
+</div>
+
+<div class="note">
+  <b>スプレッドシート版との一番の違い。</b>
+  以前は計算結果をシートに書き込んでいたため、再計算を忘れると前日の判定が残っていました。
+  今は保存せず毎回計算するので、古い判定が残ることがありません。
+</div>
+
+<h2>3. 画面の構成</h2>
+<div class="fig">
+<svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
+  <g font-size="9.6">
+    <rect x="0" y="0" width="720" height="26" rx="4" fill="#0f172a"/>
+    <text x="12" y="17" fill="#fff" font-size="9.4">
+      HOME ｜ 在庫一覧 ｜ 入出庫 ｜ 仕入先 ｜ 保管場所 ｜ 出荷先 ｜ 取込・書き出し ｜ マスタ ｜ 判定パラメータ
+    </text>
+
+    <rect x="0" y="44" width="228" height="196" rx="6" fill="#eff6ff" stroke="#3b82f6"/>
+    <text x="14" y="64" font-size="10.5" font-weight="700" fill="#1d4ed8">毎日見る</text>
+    <text x="14" y="86" font-weight="700" fill="#0f172a">HOME</text>
+    <text x="14" y="102" fill="#475569">今日どれだけ手を打つ必要が</text>
+    <text x="14" y="116" fill="#475569">あるか。要対応リスト。</text>
+    <text x="14" y="140" font-weight="700" fill="#0f172a">在庫一覧</text>
+    <text x="14" y="156" fill="#475569">旧シートと同じ42項目。</text>
+    <text x="14" y="170" fill="#475569">絞り込み・対応状況の変更。</text>
+    <text x="14" y="194" font-weight="700" fill="#0f172a">入出庫</text>
+    <text x="14" y="210" fill="#475569">入庫・出庫・調整の登録と</text>
+    <text x="14" y="224" fill="#475569">履歴、出荷先別の実績。</text>
+
+    <rect x="246" y="44" width="228" height="196" rx="6" fill="#f5f3ff" stroke="#7c3aed"/>
+    <text x="260" y="64" font-size="10.5" font-weight="700" fill="#6d28d9">ときどき整える</text>
+    <text x="260" y="86" font-weight="700" fill="#0f172a">仕入先／保管場所／出荷先</text>
+    <text x="260" y="102" fill="#475569">一覧と「新規登録」。使用中の</text>
+    <text x="260" y="116" fill="#475569">ものは削除できない。</text>
+    <text x="260" y="140" font-weight="700" fill="#0f172a">マスタ</text>
+    <text x="260" y="156" fill="#475569">対応状況・カテゴリ・単位。</text>
+    <text x="260" y="170" fill="#475569">品番の採番ルール。</text>
+    <text x="260" y="194" font-weight="700" fill="#0f172a">判定パラメータ</text>
+    <text x="260" y="210" fill="#475569">安全在庫日数・発注サイクル</text>
+    <text x="260" y="224" fill="#475569">など、判定の効き方。</text>
+
+    <rect x="492" y="44" width="228" height="196" rx="6" fill="#fff7ed" stroke="#ea580c"/>
+    <text x="506" y="64" font-size="10.5" font-weight="700" fill="#c2410c">出し入れする</text>
+    <text x="506" y="86" font-weight="700" fill="#0f172a">取込・書き出し</text>
+    <text x="506" y="102" fill="#475569">旧シートからの引っ越し。</text>
+    <text x="506" y="116" fill="#475569">毎日の販売データ取込。</text>
+    <text x="506" y="130" fill="#475569">42項目のCSV書き出し。</text>
+    <text x="506" y="160" font-weight="700" fill="#0f172a">日次アラート（自動）</text>
+    <text x="506" y="176" fill="#475569">優先度A・Bを毎朝メールで</text>
+    <text x="506" y="190" fill="#475569">送る（設定したとき）。</text>
+    <text x="506" y="214" fill="#94a3b8" font-size="9">画面を開かなくても</text>
+    <text x="506" y="228" fill="#94a3b8" font-size="9">気づける導線。</text>
+  </g>
+</svg>
+
+  <div class="caption"><b>図2</b>　上部メニューの並びと役割。毎日触るのは左の3つだけです。</div>
+</div>
+</div>
+
+<div class="page">
+<h2>4. 運用サイクル</h2>
+<table>
+  <tr><th style="width:14%">頻度</th><th style="width:44%">やること</th><th>使う画面</th></tr>
+  <tr><td><b>毎朝</b></td>
+      <td>HOMEで優先度A・Bを確認して発注。発注したら対応状況を「発注済み」にする</td>
+      <td>HOME → 在庫一覧</td></tr>
+  <tr><td><b>その都度</b></td>
+      <td>入庫・出庫が発生したら登録する（まとめてCSVでも可）</td><td>入出庫</td></tr>
+  <tr><td><b>週1回</b></td>
+      <td>優先度Cを見る。過剰在庫・滞留在庫の整理、棚卸差異の原因確認</td>
+      <td>在庫一覧（優先度Cで絞る）</td></tr>
+  <tr><td><b>月1回</b></td>
+      <td>リードタイムや安全在庫日数の実績を見直す。廃番の整理</td>
+      <td>商品編集／判定パラメータ</td></tr>
+</table>
+
+<h2>5. 在庫はこう動く</h2>
+<p>在庫は出荷のぶんだけ毎日減り、入荷でまた増えます。このノコギリの形のどこにいるかで、発注すべきかが決まります。</p>
+<div class="fig">
+<svg viewBox="0 0 720 340" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
+  <defs>
+    <marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#0f172a"/>
+    </marker>
+  </defs>
+  <g font-size="9.4">
+    <!-- 軸 -->
+    <line x1="64" y1="40" x2="64" y2="258" stroke="#94a3b8"/>
+    <line x1="64" y1="258" x2="612" y2="258" stroke="#94a3b8" marker-end="url(#a2)"/>
+    <text x="30" y="46" fill="#64748b">在庫数</text>
+    <text x="596" y="274" fill="#64748b">日</text>
+
+    <!-- 3本の閾値（ラベルは枠内に収める） -->
+    <line x1="64" y1="67" x2="600" y2="67" stroke="#0277bd" stroke-width="1.2" stroke-dasharray="6 4"/>
+    <text x="606" y="64" fill="#0277bd" font-size="9" font-weight="700">適正在庫上限</text>
+    <text x="606" y="77" fill="#0277bd" font-size="8.2">超えると過剰在庫</text>
+
+    <line x1="64" y1="163" x2="600" y2="163" stroke="#f59e0b" stroke-width="1.6"/>
+    <text x="606" y="160" fill="#b45309" font-size="9" font-weight="700">発注点</text>
+    <text x="606" y="173" fill="#b45309" font-size="8.2">割ったら発注する</text>
+
+    <line x1="64" y1="221" x2="600" y2="221" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="3 3"/>
+    <text x="606" y="218" fill="#b91c1c" font-size="9" font-weight="700">安全在庫</text>
+    <text x="606" y="231" fill="#b91c1c" font-size="8.2">遅れに備える分</text>
+
+    <!-- 在庫の推移（のこぎり波） -->
+    <path d="M64,67 L397,225" fill="none" stroke="#0f172a" stroke-width="2.2"/>
+    <path d="M397,225 L397,67" fill="none" stroke="#059669" stroke-width="2.2"/>
+    <path d="M397,67 L600,163" fill="none" stroke="#0f172a" stroke-width="2.2"/>
+    <!-- 発注しなかった場合 -->
+    <path d="M397,225 L470,258" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4"/>
+    <circle cx="470" cy="258" r="4.5" fill="#dc2626"/>
+    <text x="410" y="250" fill="#b91c1c" font-size="9" font-weight="700">発注しなければ欠品</text>
+
+    <!-- 発注する日 -->
+    <line x1="267" y1="163" x2="267" y2="292" stroke="#b45309" stroke-width="1" stroke-dasharray="3 3"/>
+    <circle cx="267" cy="163" r="4.5" fill="#f59e0b" stroke="#fff"/>
+    <!-- 入荷 -->
+    <line x1="397" y1="225" x2="397" y2="292" stroke="#059669" stroke-width="1" stroke-dasharray="3 3"/>
+    <circle cx="397" cy="67" r="4.5" fill="#059669" stroke="#fff"/>
+    <text x="407" y="60" fill="#047857" font-size="9" font-weight="700">入荷して回復</text>
+
+    <!-- リードタイム区間 -->
+    <path d="M267,278 L267,284 L397,284 L397,278" fill="none" stroke="#475569"/>
+    <text x="332" y="298" text-anchor="middle" fill="#334155" font-size="9">
+      ② リードタイム（発注してから入荷するまで）
+    </text>
+    <text x="267" y="316" text-anchor="middle" fill="#b45309" font-size="9" font-weight="700">
+      ① 発注点を割る＝この日に発注
+    </text>
+    <text x="397" y="316" text-anchor="middle" fill="#047857" font-size="9" font-weight="700">③ 入荷</text>
+
+    <text x="76" y="86" fill="#475569" font-size="9">出荷のぶんだけ、毎日減っていく</text>
+    <text x="64" y="336" fill="#64748b" font-size="8.8">
+      発注点は「リードタイム中に売れる分 ＋ 安全在庫」。発注点を割った日に発注すれば、安全在庫に少し 食い込むだけで入荷が間に合う。
+    </text>
+  </g>
+</svg>
+
+  <div class="caption"><b>図3</b>　在庫の推移と3本の線。<b>発注点</b>を割った日に発注すれば、
+  リードタイム中に安全在庫を少し食うだけで入荷が間に合います。</div>
+</div>
+<table>
+  <tr><th style="width:20%">線</th><th style="width:42%">意味</th><th>割ったら／超えたら</th></tr>
+  <tr><td><b>適正在庫上限</b></td><td>持ちすぎない上限。リードタイム＋安全在庫＋発注サイクル分</td>
+      <td>超えると <span class="badge" style="background:#0277bd;color:#ffffff">過剰在庫</span></td></tr>
+  <tr><td><b>発注点</b></td><td>リードタイム中に売れる分 ＋ 安全在庫</td>
+      <td>割ると <span class="badge" style="background:#f9a825;color:#000000">発注推奨</span></td></tr>
+  <tr><td><b>安全在庫</b></td><td>納期の遅れや急な注文に備える分</td><td>ここを割ると危険水域</td></tr>
+</table>
+</div>
+
+<div class="page">
+<h2>6. 計算式</h2>
+<pre>有効在庫       = (実棚在庫 があれば実棚 / 無ければ理論在庫) − 引当数
+在庫ポジション  = 有効在庫 + 発注残数        ← 発注判定はこの値で行う
+平均日次出庫    = 期間出庫数 ÷ 30日
+在庫日数       = 有効在庫 ÷ 平均日次出庫
+欠品予測日      = 今日 + 在庫日数
+安全在庫       = 平均日次出庫 × 安全在庫日数(既定7日)
+発注点         = 平均日次出庫 × リードタイム + 安全在庫
+適正在庫上限    = 平均日次出庫 × (リードタイム + 安全在庫日数 + 発注サイクル14日)
+発注推奨数      = 適正在庫上限まで戻す量を、MOQ と発注ロット単位に切り上げた数
+発注期限日      = 欠品予測日 − リードタイム</pre>
+
+<div class="note">
+  <b>なぜ「有効在庫＋発注残」で判定するのか。</b>
+  手元の在庫だけで見ると、発注済みの商品にも毎日「発注してください」と出続けます。
+  そうなるとアラート自体が信用されなくなり、本当に危ない行も見逃されます。
+</div>
+
+<h3>商品ごとに変えられる値</h3>
+<table>
+  <tr><th style="width:28%">項目</th><th>効き方</th></tr>
+  <tr><td>発注リードタイム日数</td><td><b>発注点計算の中核。</b>長いほど早めに発注点に当たる</td></tr>
+  <tr><td>安全在庫日数</td><td>空欄なら既定7日。切らしたくない商品は長くする</td></tr>
+  <tr><td>最小発注数(MOQ)</td><td>発注推奨数の下限</td></tr>
+  <tr><td>発注ロット単位</td><td>ケース入数など。発注推奨数はこの倍数に切り上がる</td></tr>
+</table>
+</div>
+
+<div class="page">
+<h2>7. アラート8区分</h2>
+<p>8つの条件を<b>重い順</b>に見て、最初に当たった1つだけを表示します。1つの商品に2つ付くことはありません。</p>
+<div class="fig"><svg viewBox="0 0 720 430" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
+<defs><marker id="a3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#cbd5e1"/></marker></defs>
+<g font-size="9.6">
+<rect x="0" y="8" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="23" font-size="8.6" fill="#94a3b8">条件 1</text>
+<text x="52" y="30" fill="#334155">有効在庫 ≦ 0</text>
+<line x1="396" y1="25" x2="424" y2="25" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="12" width="104" height="26" rx="4" fill="#b71c1c"/>
+<text x="482" y="29" text-anchor="middle" fill="#ffffff" font-weight="700">欠品</text>
+<rect x="548" y="12" width="96" height="26" rx="4" fill="#f4cccc"/>
+<text x="596" y="29" text-anchor="middle" fill="#990000" font-weight="700" font-size="9">優先度 A</text>
+<line x1="18" y1="42" x2="18" y2="54" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<text x="28" y="53" font-size="8.4" fill="#94a3b8">当たらなければ次の条件へ</text>
+<rect x="0" y="56" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="71" font-size="8.6" fill="#94a3b8">条件 2</text>
+<text x="52" y="78" fill="#334155">発注点割れ かつ 発注残0 かつ 発注期限を過ぎている</text>
+<line x1="396" y1="73" x2="424" y2="73" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="60" width="104" height="26" rx="4" fill="#d32f2f"/>
+<text x="482" y="77" text-anchor="middle" fill="#ffffff" font-weight="700">発注漏れ</text>
+<rect x="548" y="60" width="96" height="26" rx="4" fill="#f4cccc"/>
+<text x="596" y="77" text-anchor="middle" fill="#990000" font-weight="700" font-size="9">優先度 A</text>
+<line x1="18" y1="90" x2="18" y2="102" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<rect x="0" y="104" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="119" font-size="8.6" fill="#94a3b8">条件 3</text>
+<text x="52" y="126" fill="#334155">在庫日数 ≦ リードタイム</text>
+<line x1="396" y1="121" x2="424" y2="121" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="108" width="104" height="26" rx="4" fill="#ef6c00"/>
+<text x="482" y="125" text-anchor="middle" fill="#ffffff" font-weight="700">欠品リスク</text>
+<rect x="548" y="108" width="96" height="26" rx="4" fill="#f4cccc"/>
+<text x="596" y="125" text-anchor="middle" fill="#990000" font-weight="700" font-size="9">優先度 A</text>
+<line x1="18" y1="138" x2="18" y2="150" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<rect x="0" y="152" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="167" font-size="8.6" fill="#94a3b8">条件 4</text>
+<text x="52" y="174" fill="#334155">入荷予定日を過ぎても未入庫</text>
+<line x1="396" y1="169" x2="424" y2="169" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="156" width="104" height="26" rx="4" fill="#7b1fa2"/>
+<text x="482" y="173" text-anchor="middle" fill="#ffffff" font-weight="700">入荷遅延</text>
+<rect x="548" y="156" width="96" height="26" rx="4" fill="#ffedc2"/>
+<text x="596" y="173" text-anchor="middle" fill="#7f6000" font-weight="700" font-size="9">優先度 B</text>
+<line x1="18" y1="186" x2="18" y2="198" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<rect x="0" y="200" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="215" font-size="8.6" fill="#94a3b8">条件 5</text>
+<text x="52" y="222" fill="#334155">在庫ポジション ≦ 発注点</text>
+<line x1="396" y1="217" x2="424" y2="217" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="204" width="104" height="26" rx="4" fill="#f9a825"/>
+<text x="482" y="221" text-anchor="middle" fill="#000000" font-weight="700">発注推奨</text>
+<rect x="548" y="204" width="96" height="26" rx="4" fill="#ffedc2"/>
+<text x="596" y="221" text-anchor="middle" fill="#7f6000" font-weight="700" font-size="9">優先度 B</text>
+<line x1="18" y1="234" x2="18" y2="246" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<rect x="0" y="248" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="263" font-size="8.6" fill="#94a3b8">条件 6</text>
+<text x="52" y="270" fill="#334155">有効在庫 > 適正在庫上限</text>
+<line x1="396" y1="265" x2="424" y2="265" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="252" width="104" height="26" rx="4" fill="#0277bd"/>
+<text x="482" y="269" text-anchor="middle" fill="#ffffff" font-weight="700">過剰在庫</text>
+<rect x="548" y="252" width="96" height="26" rx="4" fill="#d8e6f4"/>
+<text x="596" y="269" text-anchor="middle" fill="#1c4587" font-weight="700" font-size="9">優先度 C</text>
+<line x1="18" y1="282" x2="18" y2="294" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<rect x="0" y="296" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="311" font-size="8.6" fill="#94a3b8">条件 7</text>
+<text x="52" y="318" fill="#334155">90日以上 出庫が無く、在庫がある</text>
+<line x1="396" y1="313" x2="424" y2="313" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="300" width="104" height="26" rx="4" fill="#455a64"/>
+<text x="482" y="317" text-anchor="middle" fill="#ffffff" font-weight="700">滞留在庫</text>
+<rect x="548" y="300" width="96" height="26" rx="4" fill="#d8e6f4"/>
+<text x="596" y="317" text-anchor="middle" fill="#1c4587" font-weight="700" font-size="9">優先度 C</text>
+<line x1="18" y1="330" x2="18" y2="342" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<rect x="0" y="344" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="359" font-size="8.6" fill="#94a3b8">条件 8</text>
+<text x="52" y="366" fill="#334155">実棚在庫 ≠ 理論在庫</text>
+<line x1="396" y1="361" x2="424" y2="361" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="348" width="104" height="26" rx="4" fill="#5d4037"/>
+<text x="482" y="365" text-anchor="middle" fill="#ffffff" font-weight="700">棚卸差異</text>
+<rect x="548" y="348" width="96" height="26" rx="4" fill="#d8e6f4"/>
+<text x="596" y="365" text-anchor="middle" fill="#1c4587" font-weight="700" font-size="9">優先度 C</text>
+<rect x="0" y="392" width="392" height="30" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="4 3"/>
+<text x="14" y="412" fill="#64748b">どれにも当たらない</text>
+<rect x="430" y="394" width="104" height="26" rx="4" fill="#e8f5e9"/>
+<text x="482" y="411" text-anchor="middle" fill="#1b5e20" font-weight="700">正常</text>
+</g></svg>
+  <div class="caption"><b>図4</b>　判定の順序。当たらなければ次の条件に進みます。</div>
+</div>
+<table>
+  <tr><th style="width:18%" class="c">優先度</th><th style="width:30%">意味</th><th>いつ見るか</th></tr>
+  <tr><td class="c"><span class="badge" style="background:#f4cccc;color:#990000">A:即日対応</span></td>
+      <td>今日中に手を打たないと欠品する</td><td>毎朝いちばんに</td></tr>
+  <tr><td class="c"><span class="badge" style="background:#ffedc2;color:#7f6000">B:3日以内</span></td>
+      <td>3日以内に発注すれば間に合う</td><td>毎朝。Aを片付けた後</td></tr>
+  <tr><td class="c"><span class="badge" style="background:#d8e6f4;color:#1c4587">C:要確認</span></td>
+      <td>すぐ欠品はしないが、在庫が傷んでいる</td><td>週に1回まとめて</td></tr>
+</table>
+</div>
+
+<div class="page">
+<h2>8. 設定できること</h2>
+<h3>判定パラメータ（全商品に共通）</h3>
+<table>
+  <tr><th style="width:24%">項目</th><th style="width:9%" class="c">既定</th>
+      <th style="width:33%">大きくすると</th><th>小さくすると</th></tr>
+  <tr><td>消化傾向の集計期間</td><td class="c">30日</td>
+      <td>判定が安定するが、需要の変化に鈍くなる</td><td>季節変動に追従するが、数字がブレやすい</td></tr>
+  <tr><td>安全在庫日数（既定値）</td><td class="c">7日</td>
+      <td>欠品しにくくなるが、在庫が増える</td><td>在庫は減るが、欠品リスクが上がる</td></tr>
+  <tr><td>発注サイクル</td><td class="c">14日</td>
+      <td>発注回数は減るが、1回の量と在庫が増える</td><td>こまめな発注になり、事務負荷が上がる</td></tr>
+  <tr><td>滞留とみなす日数</td><td class="c">90日</td>
+      <td>滞留の警告が出にくくなる</td><td>季節商品が滞留扱いされやすい</td></tr>
+  <tr><td>棚卸差異を見逃す範囲</td><td class="c">0</td>
+      <td>小さなズレを無視できる</td><td>1個のズレも棚卸差異として出る</td></tr>
+</table>
+<div class="tip">
+  <b>いじる順番。</b>まず既定のまま1か月運用し、「欠品が出た商品は安全在庫日数を延ばす」
+  「毎週同じ商品で発注推奨が出て事務が重いなら発注サイクルを延ばす」というように、
+  実績を見てから1つずつ動かすのが安全です。
+</div>
+
+<h3>マスタ</h3>
+<table>
+  <tr><th style="width:22%">画面</th><th style="width:32%">持っている項目</th><th>入力制限</th></tr>
+  <tr><td>マスタ（対応状況）</td><td>名前・色・並び順</td><td><b>あり。</b>ここに無い値は選べない</td></tr>
+  <tr><td>マスタ（カテゴリ・単位）</td><td>名前・並び順</td><td>なし。候補として出すだけ</td></tr>
+  <tr><td>仕入先</td><td>名前・仕入先コード</td><td>なし。商品編集で選ぶとコードも入る</td></tr>
+  <tr><td>保管場所</td><td>名前・並び順</td><td>なし</td></tr>
+  <tr><td>出荷先</td><td>名前・コード・区分・住所・担当者・電話</td><td>出庫の登録時に選ぶ</td></tr>
+</table>
+<div class="warn">
+  <b>使われているものは削除できません。</b>
+  消すと、その商品や出庫の相手先が宙に浮いた文字列として残るためです。
+  一覧に使用件数を出しているので、0件のものだけ削除でき、使用中は「非表示」で運用から外します。
+</div>
+
+</div>
+
+<div class="page">
+<h3>品番（商品コード）の採番</h3>
+<div class="fig">
+<svg viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
+  <defs><marker id="a6" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+    <path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker></defs>
+  <g font-size="9.6">
+    <rect x="0" y="40" width="150" height="56" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="75" y="62" text-anchor="middle" fill="#334155">① カテゴリを選ぶ</text>
+    <text x="75" y="80" text-anchor="middle" fill="#0f172a" font-weight="700">空調機器</text>
+
+    <rect x="186" y="26" width="196" height="84" rx="6" fill="#f5f3ff" stroke="#7c3aed"/>
+    <text x="284" y="46" text-anchor="middle" fill="#6d28d9" font-weight="700">② 採番ルールを探す</text>
+    <text x="198" y="66" fill="#334155" font-size="9">カテゴリ専用のルールがあれば それ</text>
+    <text x="198" y="81" fill="#334155" font-size="9">無ければ カテゴリ空欄の既定ルール</text>
+    <text x="198" y="99" fill="#0f172a" font-size="9">接頭辞 AC ／ 区切り - ／ 4桁 ／ 次の番号 1</text>
+
+    <rect x="418" y="40" width="150" height="56" rx="6" fill="#ecfdf5" stroke="#059669"/>
+    <text x="493" y="62" text-anchor="middle" fill="#047857" font-weight="700">③ 発番</text>
+    <text x="493" y="84" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="700">AC-0001</text>
+
+    <rect x="604" y="40" width="116" height="56" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="662" y="60" text-anchor="middle" fill="#334155" font-size="9">④ 次の番号が</text>
+    <text x="662" y="76" text-anchor="middle" fill="#334155" font-size="9">2 に進む</text>
+    <text x="662" y="90" text-anchor="middle" fill="#94a3b8" font-size="8.4">（押した時点で確保）</text>
+
+    <g stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a6)" fill="none">
+      <path d="M150,68 L182,68"/>
+      <path d="M382,68 L414,68"/>
+      <path d="M568,68 L600,68"/>
+    </g>
+
+    <rect x="0" y="130" width="720" height="34" rx="5" fill="#fffbeb" stroke="#fcd34d"/>
+    <text x="14" y="151" fill="#92400e" font-size="9.2">
+      すでに使われている番号（旧シートから取り込んだコードなど）に当たった場合は、空いている番号まで自動で進みます。
+    </text>
+    <text x="0" y="186" fill="#64748b" font-size="9">
+      押した時点で番号を確保するため、登録をやめると欠番になります（二人が同時に登録して同じ番号が出るのを防ぐ作りです）。
+    </text>
+  </g>
+</svg>
+
+  <div class="caption"><b>図5</b>　カテゴリごとに「接頭辞＋連番」を決めておくと、新規登録時に発番できます。</div>
+</div>
+
+<h2>9. データの入れ方</h2>
+<div class="fig">
+<svg viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
+  <defs><marker id="a7" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+    <path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker></defs>
+  <g font-size="9.4">
+    <rect x="0" y="30" width="150" height="62" rx="6" fill="#ecfdf5" stroke="#059669"/>
+    <text x="75" y="52" text-anchor="middle" font-weight="700" fill="#047857">① 旧シート</text>
+    <text x="75" y="70" text-anchor="middle" fill="#334155">ファイル → ダウンロード</text>
+    <text x="75" y="84" text-anchor="middle" fill="#334155">→ カンマ区切り(.csv)</text>
+
+    <rect x="186" y="30" width="150" height="62" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="261" y="52" text-anchor="middle" font-weight="700" fill="#334155">② ファイルを選ぶ</text>
+    <text x="261" y="70" text-anchor="middle" fill="#334155">見出しの並びは</text>
+    <text x="261" y="84" text-anchor="middle" fill="#334155">旧シートのままでよい</text>
+
+    <rect x="372" y="30" width="150" height="62" rx="6" fill="#fffbeb" stroke="#f59e0b"/>
+    <text x="447" y="52" text-anchor="middle" font-weight="700" fill="#92400e">③ 内容を確認</text>
+    <text x="447" y="70" text-anchor="middle" fill="#334155">新規 / 更新 / エラー</text>
+    <text x="447" y="84" text-anchor="middle" fill="#334155">の件数が出る</text>
+
+    <rect x="558" y="30" width="162" height="62" rx="6" fill="#eff6ff" stroke="#3b82f6"/>
+    <text x="639" y="52" text-anchor="middle" font-weight="700" fill="#1d4ed8">④ 取り込む</text>
+    <text x="639" y="70" text-anchor="middle" fill="#334155">商品コードが一致 → 更新</text>
+    <text x="639" y="84" text-anchor="middle" fill="#334155">無ければ → 新規追加</text>
+
+    <g stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a7)" fill="none">
+      <path d="M150,61 L182,61"/><path d="M336,61 L368,61"/><path d="M522,61 L554,61"/>
+    </g>
+    <text x="0" y="122" fill="#64748b" font-size="9">
+      自動計算列（有効在庫・発注点・アラート区分など）が入っていても読み飛ばすので、シートをそのまま出して構いません。
+    </text>
+    <text x="0" y="138" fill="#64748b" font-size="9">
+      タブ区切り（シートの範囲をコピーして貼り付け）でも読めます。
+    </text>
+  </g>
+</svg>
+
+  <div class="caption"><b>図6</b>　旧スプレッドシートからの移行。書き出してそのまま取り込むだけです。</div>
+</div>
+<p>
+  自動計算列（有効在庫・発注点・アラート区分など）が入っていても読み飛ばすので、シートをそのまま出して構いません。
+  必須は<b>「商品コード」と「商品名」</b>の2つだけで、並び順は問いません。
+</p>
+
+</div>
+
+<div class="page">
+<h3>毎日のデータは部分更新で入れられる</h3>
+<div class="fig">
+<svg viewBox="0 0 720 176" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
+  <g font-size="9">
+    <text x="0" y="12" font-size="9.6" font-weight="700" fill="#0f172a">
+      取り込むCSV（商品コードと期間出庫数だけ）
+    </text>
+    <rect x="0" y="20" width="300" height="48" rx="4" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="12" y="38" font-family="monospace" fill="#334155">商品コード,期間出庫数(直近30日)</text>
+    <text x="12" y="54" font-family="monospace" fill="#334155">DEMO-005,600</text>
+
+    <text x="360" y="12" font-size="9.6" font-weight="700" fill="#0f172a">商品の中身</text>
+    <g>
+      <rect x="360" y="20" width="360" height="22" fill="#ecfdf5" stroke="#059669"/>
+      <text x="372" y="35" fill="#047857">期間出庫数　150 → <tspan font-weight="700">600</tspan> に更新される</text>
+      <rect x="360" y="46" width="360" height="22" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="372" y="61" fill="#475569">仕入単価　120 のまま</text>
+      <rect x="360" y="72" width="360" height="22" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="372" y="87" fill="#475569">リードタイム　2日 のまま</text>
+      <rect x="360" y="98" width="360" height="22" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="372" y="113" fill="#475569">保管場所・仕入先・備考　そのまま</text>
+    </g>
+
+    <rect x="0" y="134" width="720" height="34" rx="5" fill="#f0f9ff" stroke="#bae6fd"/>
+    <text x="14" y="155" fill="#075985" font-size="9.2">
+      CSVに載っていない列は、いまの値のまま残ります。だから「商品コード＋期間出庫数」だけのファイルを毎日流し込めます。
+    </text>
+  </g>
+</svg>
+
+  <div class="caption"><b>図7</b>　CSVに載っていない列は現在値のまま。だから毎日の販売データを部分更新で流せます。</div>
+</div>
+
+<h3>入出庫を入れると判定の材料が変わる</h3>
+<div class="fig">
+<svg viewBox="0 0 720 190" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
+  <defs><marker id="a5" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+    <path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker></defs>
+  <g font-size="9.6">
+    <rect x="0" y="66" width="150" height="46" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="75" y="86" text-anchor="middle" fill="#334155">期間出庫数を</text>
+    <text x="75" y="101" text-anchor="middle" fill="#334155">どこから取るか</text>
+
+    <path d="M232,89 L188,89 L188,89 Z" fill="none"/>
+    <polygon points="256,50 344,89 256,128 168,89" fill="#fffbeb" stroke="#f59e0b"/>
+    <text x="256" y="85" text-anchor="middle" fill="#92400e" font-size="9">その商品に</text>
+    <text x="256" y="99" text-anchor="middle" fill="#92400e" font-size="9">出庫の登録がある？</text>
+
+    <rect x="404" y="18" width="250" height="52" rx="6" fill="#ecfdf5" stroke="#059669"/>
+    <text x="418" y="38" fill="#047857" font-weight="700">ある → 台帳から集計する</text>
+    <text x="418" y="55" fill="#334155" font-size="9">直近30日の出庫を合計。最終入出庫日も台帳の日付</text>
+
+    <rect x="404" y="108" width="250" height="52" rx="6" fill="#f8fafc" stroke="#94a3b8"/>
+    <text x="418" y="128" fill="#334155" font-weight="700">ない → 手入力の値を使う</text>
+    <text x="418" y="145" fill="#334155" font-size="9">商品編集やCSVで入れた「期間出庫数」で判定する</text>
+
+    <g stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a5)" fill="none">
+      <path d="M150,89 L164,89"/>
+      <path d="M344,89 L374,89 L374,44 L400,44"/>
+      <path d="M344,89 L374,89 L374,134 L400,134"/>
+    </g>
+    <text x="0" y="180" fill="#64748b" font-size="9">
+      商品ごとに切り替わるので、入出庫を入れ始めた商品から順に精度が上がる。全商品を揃える必要はない。
+    </text>
+  </g>
+</svg>
+
+  <div class="caption"><b>図8</b>　出庫を1件でも登録した商品は、期間出庫数を台帳から自動集計します。
+  商品ごとに切り替わるので、全商品を一度に揃える必要はありません。</div>
+</div>
+</div>
+
+<div class="page">
+<h2>10. 運用上の注意</h2>
+
+<h3>判定は保存していない</h3>
+<p>
+  有効在庫・発注点・アラート区分などはデータベースに持たず、画面を開くたびに計算しています。
+  だから「再計算を忘れて古い判定が残る」ことがなく、数字を直せばその場で判定が変わります。
+  裏を返すと、<b>これらの列は直接編集できません</b>。もとになる数字を直してください。
+</p>
+
+<h3>アラートは機械、対応は人</h3>
+<p>
+  対応状況（発注済み・保留・廃盤・発注NG）の列は、計算で書き換わることが絶対にありません。
+  「発注漏れ」と出ていても、対応状況が「発注済み」なら手当て済みとして扱います。
+</p>
+
+<h3>公開URLとアクセス制限</h3>
+<table>
+  <tr><th style="width:26%">項目</th><th>内容</th></tr>
+  <tr><td>ログイン</td><td>画面内のログインは無い。URLを開いた時点で出る<b>ID・パスワード（Basic認証）</b>で入口を塞いでいる</td></tr>
+  <tr><td>スリープ</td><td>無料プランは一定時間アクセスが無いと停止する。平日9〜21時は自動で起こしているが、
+      夜間・休日の初回は表示に30秒ほどかかる</td></tr>
+  <tr><td>バックアップ</td><td>「取込・書き出し」から42項目のCSVと入出庫CSVを書き出しておく</td></tr>
+</table>
+
+<h3>日次アラート</h3>
+<p>
+  優先度A・Bの一覧を毎朝メールで送れます（設定したときのみ）。
+  画面を開かなくても気づけるので、朝いちばんの確認をメールに寄せる運用もできます。
+</p>
+
+<div class="tip">
+  <b>導入の進め方。</b>
+  ①旧シートをCSVで取り込む → ②マスタ（仕入先・保管場所・出荷先）を自社のものに直す →
+  ③1〜2週間そのまま運用してアラートの出方を見る → ④多すぎる／少なすぎる区分があれば
+  判定パラメータか商品ごとのリードタイム・安全在庫日数を調整、の順が安全です。
+</div>
+</div>
+
+</body></html>

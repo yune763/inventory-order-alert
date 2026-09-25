@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8">
-<title>在庫・発注アラート 03 毎日の操作</title>
+<title>在庫・発注アラート B 操作マニュアル</title>
 <style>:root { --accent: #1d4ed8; }
 @page { size: A4; margin: 14mm 13mm 15mm; }
 * { box-sizing: border-box; }
@@ -65,17 +65,29 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
           display:flex; justify-content:space-between; }
 </style>
 </head><body>
-<div class="footer"><span>在庫・発注アラート — 毎日の操作</span><span>03</span></div>
+<div class="footer"><span>在庫・発注アラート — 操作マニュアル</span><span>B</span></div>
 
 <div class="page">
 <div class="cover">
-  <div class="eyebrow">在庫・発注アラート　03</div>
-  <h1>毎日の操作</h1>
-  <p class="lead">HOMEの見方と、在庫一覧での絞り込み・対応状況の付け方。</p>
+  <div class="eyebrow">在庫・発注アラート　B</div>
+  <h1>操作マニュアル</h1>
+  <p class="lead">毎日の画面の触り方。</p>
   <div class="meta">欠品 / 発注漏れ / 過剰在庫 / 在庫精度（棚卸差異）を、在庫数と出荷実績から自動で判定するシステム</div>
 </div>
 
-<h2>1. 朝いちばん：HOMEを開く</h2>
+<table style="margin-top:14px"><tr><td class="c" style="width:12%"><b>1</b></td><td style="width:32%"><b>1日の流れ</b></td><td>朝に見る・その都度入れる・週に1回片付ける</td></tr><tr><td class="c" style="width:12%"><b>2</b></td><td style="width:32%"><b>HOMEを開く</b></td><td>今日どれだけ手を打つ必要があるか</td></tr><tr><td class="c" style="width:12%"><b>3</b></td><td style="width:32%"><b>在庫一覧を使う</b></td><td>絞り込み・並べ替え・列の出し入れ</td></tr><tr><td class="c" style="width:12%"><b>4</b></td><td style="width:32%"><b>対応状況を付ける</b></td><td>発注したら「発注済み」にする</td></tr><tr><td class="c" style="width:12%"><b>5</b></td><td style="width:32%"><b>入出庫を登録する</b></td><td>入庫・出庫・調整の入れ方</td></tr><tr><td class="c" style="width:12%"><b>6</b></td><td style="width:32%"><b>出荷先と入庫元</b></td><td>どこへ出したか・どこから入ったか</td></tr><tr><td class="c" style="width:12%"><b>7</b></td><td style="width:32%"><b>商品を追加する</b></td><td>品番は「採番」ボタンで発番できる</td></tr><tr><td class="c" style="width:12%"><b>8</b></td><td style="width:32%"><b>選択肢を足す</b></td><td>仕入先・保管場所・出荷先の新規登録</td></tr><tr><td class="c" style="width:12%"><b>9</b></td><td style="width:32%"><b>CSVで取り込む</b></td><td>まとめて入れる・書き出す</td></tr><tr><td class="c" style="width:12%"><b>10</b></td><td style="width:32%"><b>困ったとき</b></td><td>よくある質問</td></tr></table>
+
+<h2>1. 1日の流れ</h2>
+<table>
+  <tr><th style="width:16%">いつ</th><th style="width:40%">すること</th><th>画面</th></tr>
+  <tr><td><b>朝</b></td><td>優先度A・Bを確認して発注する。発注したら対応状況を「発注済み」に</td><td>HOME</td></tr>
+  <tr><td><b>その都度</b></td><td>入庫・出庫があったら登録する</td><td>入出庫</td></tr>
+  <tr><td><b>週1回</b></td><td>優先度Cを見る（過剰在庫・滞留在庫・棚卸差異）</td><td>在庫一覧</td></tr>
+</table>
+</div>
+
+<div class="page">
+<h2>2. HOMEを開く</h2>
 <div class="fig">
 <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
   <g font-size="9.4">
@@ -159,37 +171,26 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
   </g>
 </svg>
 
-  <div class="caption"><b>図5</b>　HOMEの見方。上の件数 → 区分の内訳 → 要対応リスト、の順に見ます。</div>
+  <div class="caption"><b>図1</b>　上の件数 → 区分の内訳 → 要対応リスト、の順に見ます。</div>
 </div>
-
 <ol class="steps">
   <li><b>A（即日対応）の件数を見る。</b>0件なら、今日中に手を打つべき商品はありません。</li>
   <li><b>要対応リストを上から片付ける。</b>「推奨アクション」に
-      「本日中に 230 発注（リードタイム7日）」のように、数量と期限が書かれています。</li>
-  <li><b>発注したら、その行の対応状況を「発注済み」に変える。</b>
-      一覧の対応状況はその場で変えられます。次の朝から、その行は手当て済みとして扱われます。</li>
+      「本日中に 230 発注（リードタイム7日）」のように数量と期限が書かれています。</li>
+  <li><b>発注したら対応状況を「発注済み」に変える。</b>一覧のプルダウンからその場で変えられます。</li>
 </ol>
-
-<div class="tip">
-  <b>アラートが消えるのはいつか。</b>
-  対応状況を変えてもアラート区分は消えません（機械の判定と人の対応は別物なので）。
-  実際に発注残（入荷予定の数）を入力するか、入出庫で入庫を登録した時点で、判定そのものが変わります。
-</div>
 </div>
 
 <div class="page">
-<h2>2. 在庫一覧の使い方</h2>
+<h2>3. 在庫一覧を使う</h2>
 <p>旧スプレッドシートと同じ42項目が、同じ並びで入っています。</p>
 
 <h3>左3列は固定されている</h3>
-<p>
-  横にスクロールしても<b>対応状況・商品コード・商品名</b>は画面に残ります。
-  どの行を見ているか見失わないためです。
-</p>
+<p>横にスクロールしても<b>対応状況・商品コード・商品名</b>は画面に残ります。</p>
 
 <h3>見たい区分だけ表示する</h3>
 <p>
-  表の上に「表示する区分」のボタンが並んでいます。押すと、その区分の列がまとめて隠れます。
+  表の上の「表示する区分」を押すと、その区分の列がまとめて隠れます。
   選んだ状態はブラウザが覚えているので、次に開いたときも同じ見え方になります。
 </p>
 <table>
@@ -206,20 +207,20 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
 <h3>絞り込みと並べ替え</h3>
 <ul>
   <li>キーワード（商品コード・商品名・型番・仕入先）、アラート区分、優先度、対応状況、カテゴリ、保管場所、仕入先で絞れます</li>
-  <li>絞り込んだ状態はURLに残るので、<b>そのままブックマークや共有ができます</b></li>
-  <li>見出しをクリックすると並べ替わります（優先度・商品コード・有効在庫・在庫日数・発注期限・在庫金額・更新日時）</li>
-  <li>「CSVで書き出す」は、<b>いま絞り込んでいるものだけ</b>を出します</li>
+  <li>絞り込んだ状態はURLに残るので、そのままブックマークや共有ができます</li>
+  <li>見出しをクリックすると並べ替わります</li>
+  <li>「CSVで書き出す」は、<b>いま絞り込んでいるものだけ</b>を出します（仕入先ごとの発注リストに便利）</li>
 </ul>
 
 <div class="note">
   <b>「自動」と付いた列は直せません。</b>
   有効在庫・発注点・アラート区分などは、開くたびに計算し直しているためです。
-  これらを変えたいときは、もとになる数字（理論在庫・引当・リードタイムなど）を直します。
+  変えたいときは、もとになる数字（理論在庫・引当・リードタイムなど）を直します。
 </div>
 </div>
 
 <div class="page">
-<h2>3. 対応状況の使い分け</h2>
+<h2>4. 対応状況を付ける</h2>
 <div class="fig">
 <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
   <defs><marker id="a4" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
@@ -261,9 +262,8 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
   </g>
 </svg>
 
-  <div class="caption"><b>図6</b>　対応状況の流れ。人が選ぶ列で、計算で書き換わることはありません。</div>
+  <div class="caption"><b>図2</b>　対応状況の流れ。人が選ぶ列で、計算で書き換わることはありません。</div>
 </div>
-
 <table>
   <tr><th style="width:20%">対応状況</th><th>使うとき</th></tr>
   <tr><td><b>即日対応</b></td><td>今日中に発注・手配すると決めた行に付けて、作業待ちを見えるようにする</td></tr>
@@ -273,11 +273,184 @@ pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
   <tr><td><b>廃盤</b></td><td>もう仕入れない商品。在庫を売り切る対象</td></tr>
   <tr><td><b>発注NG</b></td><td>仕入先都合などで発注できない行</td></tr>
 </table>
-
 <div class="tip">
-  <b>選択肢は増やせます。</b>「マスタ」画面の対応状況に行を足すと、その場でプルダウンに出ます。
-  色も指定できるので、一覧での見分けがつきやすくなります。
+  <b>アラートが消えるのはいつか。</b>
+  対応状況を変えてもアラート区分は消えません（機械の判定と人の対応は別物なので）。
+  発注残（入荷予定の数）を入力するか、入庫を登録した時点で判定そのものが変わります。
 </div>
+
+<h2>5. 入出庫を登録する</h2>
+<div class="fig">
+<svg viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
+  <g font-size="9.4">
+    <text x="0" y="14" font-weight="700" fill="#0f172a">DEMO-010 配管化粧カバー ジョイント の理論在庫</text>
+    <line x1="40" y1="200" x2="700" y2="200" stroke="#94a3b8"/>
+    <line x1="40" y1="40" x2="40" y2="200" stroke="#94a3b8"/>
+    <text x="4" y="44" fill="#64748b" font-size="8.4">600</text>
+    <text x="12" y="204" fill="#64748b" font-size="8.4">0</text>
+
+    <!-- 残高の推移（棒） -->
+    <rect x="58" y="40" width="72" height="160" fill="#d1fae5" stroke="#059669"/>
+    <text x="94" y="34" text-anchor="middle" fill="#047857" font-weight="700">600</text>
+    <text x="94" y="216" text-anchor="middle" fill="#475569" font-size="8.6">入庫 +600</text>
+    <text x="94" y="228" text-anchor="middle" fill="#94a3b8" font-size="8">8/16</text>
+
+    <rect x="158" y="72" width="72" height="128" fill="#e0f2fe" stroke="#0284c7"/>
+    <text x="194" y="66" text-anchor="middle" fill="#075985" font-weight="700">480</text>
+    <text x="194" y="216" text-anchor="middle" fill="#475569" font-size="8.6">出庫 −120</text>
+    <text x="194" y="228" text-anchor="middle" fill="#94a3b8" font-size="8">山田工務店</text>
+
+    <rect x="258" y="96" width="72" height="104" fill="#e0f2fe" stroke="#0284c7"/>
+    <text x="294" y="90" text-anchor="middle" fill="#075985" font-weight="700">390</text>
+    <text x="294" y="216" text-anchor="middle" fill="#475569" font-size="8.6">出庫 −90</text>
+    <text x="294" y="228" text-anchor="middle" fill="#94a3b8" font-size="8">中央病院</text>
+
+    <rect x="358" y="136" width="72" height="64" fill="#e0f2fe" stroke="#0284c7"/>
+    <text x="394" y="130" text-anchor="middle" fill="#075985" font-weight="700">240</text>
+    <text x="394" y="216" text-anchor="middle" fill="#475569" font-size="8.6">出庫 −150</text>
+    <text x="394" y="228" text-anchor="middle" fill="#94a3b8" font-size="8">みどり建設</text>
+
+    <rect x="458" y="139" width="72" height="61" fill="#fef3c7" stroke="#d97706"/>
+    <text x="494" y="133" text-anchor="middle" fill="#92400e" font-weight="700">230</text>
+    <text x="494" y="216" text-anchor="middle" fill="#475569" font-size="8.6">調整 −10</text>
+    <text x="494" y="228" text-anchor="middle" fill="#94a3b8" font-size="8">棚卸の不足分</text>
+
+    <rect x="558" y="165" width="72" height="35" fill="#e0f2fe" stroke="#0284c7"/>
+    <text x="594" y="159" text-anchor="middle" fill="#075985" font-weight="700">130</text>
+    <text x="594" y="216" text-anchor="middle" fill="#475569" font-size="8.6">出庫 −100</text>
+    <text x="594" y="228" text-anchor="middle" fill="#94a3b8" font-size="8">さくらマンション</text>
+
+    <rect x="650" y="165" width="50" height="35" fill="#f1f5f9" stroke="#0f172a" stroke-dasharray="4 3"/>
+    <text x="675" y="159" text-anchor="middle" fill="#0f172a" font-weight="700">130</text>
+    <text x="675" y="216" text-anchor="middle" fill="#0f172a" font-size="8.6" font-weight="700">いまの在庫</text>
+
+    <text x="40" y="252" fill="#64748b" font-size="9">
+      1件登録するたびに理論在庫が動く。取り消せば同じだけ戻る。直近30日の出庫（120+90+150+100=460）が「期間出庫数」になる。
+    </text>
+  </g>
+</svg>
+
+  <div class="caption"><b>図3</b>　登録するたびに理論在庫が動きます。取り消せば同じだけ戻ります。</div>
+</div>
+</div>
+
+<div class="page">
+<table>
+  <tr><th style="width:14%" class="c">区分</th><th style="width:20%">在庫への効き方</th><th>使うとき</th></tr>
+  <tr><td class="c"><span class="badge" style="background:#d1fae5;color:#065f46">入庫</span></td>
+      <td>増える（＋）</td><td>仕入先から入荷した／他倉庫から移ってきた／現場から返ってきた</td></tr>
+  <tr><td class="c"><span class="badge" style="background:#e0f2fe;color:#075985">出庫</span></td>
+      <td>減る（−）</td><td>得意先・現場へ出荷した／自社で使った</td></tr>
+  <tr><td class="c"><span class="badge" style="background:#fef3c7;color:#92400e">調整</span></td>
+      <td>符号のとおり（±）</td><td>棚卸で差異が出た／破損・紛失を反映する</td></tr>
+</table>
+
+<ol class="steps">
+  <li><b>「入出庫」を開く。</b>（商品の明細画面からでも同じフォームが使えます）</li>
+  <li><b>商品を探す。</b>品番でも商品名でも型番でも、一部を打てば候補が出ます。
+      候補には<b>商品名と現在庫</b>が並ぶので、品番が合っているかその場で確かめられます。</li>
+  <li><b>日付・区分・数量</b>を入れます。日付は今日が最初から入っています。</li>
+  <li><b>出庫なら出荷先、入庫なら入庫元</b>を選びます（どちらも任意）。</li>
+  <li><b>伝票番号・備考</b>を入れて「登録する」。理論在庫がその場で増減します。</li>
+</ol>
+
+<div class="note">
+  <b>入庫・出庫にマイナスは入れられません。</b>
+  減らしたいときは区分を「調整」にして、マイナスの数量で入れます。
+  入庫と出庫の合計が実態と合わなくなり、後から履歴を追えなくなるためです。
+</div>
+
+<h2>6. 出荷先と入庫元</h2>
+<table>
+  <tr><th style="width:16%">項目</th><th style="width:16%">つく区分</th><th>選び方</th></tr>
+  <tr><td><b>出荷先</b></td><td>出庫のみ</td>
+      <td>「出荷先」画面に登録したものから選ぶ</td></tr>
+  <tr><td><b>入庫元</b></td><td>入庫のみ</td>
+      <td>仕入先と、これまでに入力した入庫元が候補に出る。候補に無い相手も自由に書ける</td></tr>
+</table>
+<p>
+  「入出庫」画面と「出荷先」画面に、<b>直近30日でどこへいくつ出たか</b>が数量・件数・金額で出ます。
+  「明細」を押すと、その出荷先の出庫だけに絞った履歴が開きます。
+</p>
+</div>
+
+<div class="page">
+<h2>7. 商品を追加する</h2>
+<ol class="steps">
+  <li>「在庫一覧」→ 右上の<b>「商品を追加」</b></li>
+  <li><b>カテゴリを選んでから「採番」を押す</b>と、品番が自動で入ります（手入力も可）</li>
+  <li>商品名・単位・保管場所・仕入先を入れる。仕入先名を選ぶと<b>仕入先コードも一緒に入ります</b></li>
+  <li><b>発注リードタイム日数を必ず入れる。</b>ここが空欄だと発注判定が働きません</li>
+  <li>理論在庫数・引当数・期間出庫数などを入れて「保存する」</li>
+</ol>
+<div class="warn">
+  <b>商品コードは後から変えないでください。</b>
+  CSV取込の照合キーであり、入出庫の履歴もこのコードで結び付いています。
+</div>
+
+<h2>8. 選択肢を足す</h2>
+<p>
+  仕入先・保管場所・出荷先は、それぞれ専用ページの<b>右上「＋ 新規登録」</b>から足します。
+  行ごとの「編集」を押したときだけ入力欄に変わります。
+</p>
+<ul>
+  <li>対応状況・カテゴリ・単位は「マスタ」画面にあります</li>
+  <li><b>使われているものは削除できません。</b>一覧の使用件数が0のものだけ消せます。
+      使わなくなったものは「非表示」に切り替えてください（一覧には残りますが、選択肢に出なくなります）</li>
+</ul>
+
+<h2>9. CSVで取り込む</h2>
+<ol class="steps">
+  <li>「取込・書き出し」を開く</li>
+  <li>商品なら<b>商品CSV</b>、入出庫なら<b>入出庫CSV</b>にファイルを指定（シートからの貼り付けも可）</li>
+  <li><b>「内容を確認する」</b>で件数とエラーを見る</li>
+  <li>問題なければ<b>「◯件を取り込む」</b></li>
+</ol>
+<table>
+  <tr><th style="width:26%">種類</th><th>必須の見出し</th><th style="width:30%">エラーがあったら</th></tr>
+  <tr><td>商品CSV</td><td>商品コード / 商品名</td><td>その行だけ飛ばして取り込む</td></tr>
+  <tr><td>入出庫CSV</td><td>日付 / 区分 / 商品コード / 数量</td><td><b>1件も取り込まない</b>（在庫が合わなくなるため）</td></tr>
+</table>
+</div>
+
+<div class="page">
+<h2>10. 困ったとき</h2>
+
+<h3>発注したのにアラートが消えない</h3>
+<p>
+  対応状況を「発注済み」にしても、アラート区分は消えません（機械の判定と人の対応は別だからです）。
+  商品編集で<b>発注残数（入荷予定）</b>を入れるか、入庫を登録すると判定そのものが変わります。
+</p>
+
+<h3>在庫数を直したい</h3>
+<p>
+  実地棚卸の結果なら<b>実棚在庫数</b>に入れてください（入っていればそちらが現物として扱われます）。
+  入出庫を使っている商品なら、区分「調整」で差分を入れるほうが履歴に残って追いやすくなります。
+</p>
+
+<h3>入出庫を間違えて登録した</h3>
+<p>履歴の行の右にある<b>「取消」</b>を押してください。在庫も同じだけ戻ります。</p>
+
+<h3>「発注推奨数」が思ったより多い／少ない</h3>
+<p>
+  発注推奨数は「適正在庫上限まで戻す量」を、最小発注数(MOQ)と発注ロット単位に切り上げた数です。
+  多すぎるならロット単位かMOQを、少なすぎるなら安全在庫日数やリードタイムを確認してください。
+</p>
+
+<h3>期間出庫数が自分で入れた値と違う</h3>
+<p>
+  その商品で出庫を登録していると、<b>直近30日の出庫の合計</b>が自動で使われます（一覧に「台帳」と印が付きます）。
+  手入力の値に戻したい場合は、その商品の出庫の登録を取り消してください。
+</p>
+
+<h3>画面が出てくるまで遅い</h3>
+<p>
+  夜間・休日の最初の1回は、システムが休止状態から起きるため30秒ほどかかります。
+  平日の9〜21時は起こしてあるので、待たされることはありません。
+</p>
+
+<h3>ID・パスワードを聞かれる</h3>
+<p>URLを開いた時点で出る入口の鍵です。管理者に確認してください。</p>
 </div>
 
 </body></html>

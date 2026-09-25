@@ -12,3 +12,6 @@ webapp/.pglite/
 
 # macOS
 .DS_Store
+
+# 資料生成の中間ファイル
+docs/__pycache__/
