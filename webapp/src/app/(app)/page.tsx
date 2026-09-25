@@ -30,7 +30,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-lg font-semibold">ダッシュボード</h1>
+        <h1 className="text-lg font-semibold">HOME</h1>
         <p className="text-xs text-slate-500">
           基準日 {fmtDate(todayInTokyo())}／全 {summary.total.toLocaleString("ja-JP")} 品目
         </p>

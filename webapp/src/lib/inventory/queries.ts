@@ -160,7 +160,7 @@ export async function getItemById(id: string): Promise<EvaluatedItem | null> {
 
 /**
  * 優先度A・Bの行（＝今日と3日以内に手を打つ行）。
- * ダッシュボードの要対応リストと、日次アラート（/api/alerts/daily）が共有する。
+ * HOME画面の要対応リストと、日次アラート（/api/alerts/daily）が共有する。
  */
 export async function listActionableItems(limit = 200): Promise<EvaluatedItem[]> {
   return query<EvaluatedItem>(
@@ -183,7 +183,7 @@ export type AlertSummary = {
   orderQtyTotal: number;
 };
 
-/** ダッシュボードの集計。件数と合計だけなのでDB側で畳んでから受け取る */
+/** HOME画面の集計。件数と合計だけなのでDB側で畳んでから受け取る */
 export async function getAlertSummary(): Promise<AlertSummary> {
   const [totals, byAlert, byPriority] = await Promise.all([
     queryOne<{ total: number; stock_value: number; order_qty: number; handled: number }>(

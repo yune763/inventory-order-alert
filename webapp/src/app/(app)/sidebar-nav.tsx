@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV = [
-  { href: "/", label: "ダッシュボード" },
+  { href: "/", label: "HOME" },
   { href: "/items", label: "在庫一覧" },
   { href: "/movements", label: "入出庫" },
   { href: "/suppliers", label: "仕入先" },
