@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>在庫・発注アラート 02 判定のしくみ</title>
+<style>:root { --accent: #b45309; }
+@page { size: A4; margin: 14mm 13mm 15mm; }
+* { box-sizing: border-box; }
+body {
+  font-family: "Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  color:#1e293b; font-size:10.2pt; line-height:1.75; margin:0;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+.page { page-break-after:always; }
+.page:last-child { page-break-after:auto; }
+
+.cover { border-top:6px solid var(--accent); padding-top:14px; margin-bottom:18px; }
+.eyebrow { font-size:9pt; color:var(--accent); font-weight:700; letter-spacing:.08em; }
+h1 { font-size:20pt; margin:2px 0 6px; letter-spacing:.01em; }
+.lead { color:#475569; font-size:10.5pt; margin:0 0 4px; }
+.meta { margin-top:10px; font-size:8.6pt; color:#94a3b8; }
+
+h2 { font-size:13.5pt; margin:22px 0 10px; padding:6px 0 6px 12px;
+     border-left:5px solid var(--accent); background:linear-gradient(90deg,#f1f5f9,rgba(255,255,255,0)); }
+.page > h2:first-child { margin-top:0; }
+h3 { font-size:11pt; margin:16px 0 6px; color:#0f172a; }
+p { margin:0 0 9px; }
+ul,ol { margin:0 0 10px; padding-left:1.3em; }
+li { margin-bottom:3px; }
+
+table { border-collapse:collapse; width:100%; margin:8px 0 14px; font-size:9.1pt; }
+th,td { border:1px solid #e2e8f0; padding:5px 8px; text-align:left; vertical-align:top; }
+th { background:#f1f5f9; font-weight:700; color:#334155; }
+td.c,th.c { text-align:center; } td.r,th.r { text-align:right; }
+tbody tr:nth-child(even) { background:#fafbfc; }
+
+code { font-family:"SF Mono",Menlo,monospace; font-size:8.8pt; background:#f1f5f9;
+       padding:1px 5px; border-radius:3px; color:#0f172a; }
+pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
+      font-family:"SF Mono",Menlo,monospace; font-size:8.6pt; line-height:1.65; overflow:hidden;
+      margin:8px 0 14px; white-space:pre-wrap; }
+
+.note { border:1px solid #fcd34d; background:#fffbeb; border-left:4px solid #f59e0b;
+        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+.note b { color:#92400e; }
+.tip  { border:1px solid #bae6fd; background:#f0f9ff; border-left:4px solid #0284c7;
+        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+.warn { border:1px solid #fecaca; background:#fef2f2; border-left:4px solid #dc2626;
+        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+
+.fig { margin:14px 0 18px; }
+.fig svg { width:100%; height:auto; display:block; }
+.caption { font-size:8.8pt; color:#64748b; margin-top:5px; }
+.caption b { color:#334155; }
+
+.badge { display:inline-block; border-radius:3px; padding:1px 6px; font-size:8.6pt; font-weight:700; }
+.steps { counter-reset:step; list-style:none; padding:0; margin:10px 0 14px; }
+.steps > li { counter-increment:step; position:relative; padding-left:30px; margin-bottom:9px; }
+.steps > li::before {
+  content:counter(step); position:absolute; left:0; top:1px;
+  width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff;
+  font-size:9pt; font-weight:700; text-align:center; line-height:20px;
+}
+.cols { display:flex; gap:14px; }
+.cols > * { flex:1; }
+.footer { position:fixed; bottom:-9mm; left:0; right:0; font-size:8pt; color:#94a3b8;
+          display:flex; justify-content:space-between; }
+</style>
+</head><body>
+<div class="footer"><span>在庫・発注アラート — 判定のしくみ</span><span>02</span></div>
+
+<div class="page">
+<div class="cover">
+  <div class="eyebrow">在庫・発注アラート　02</div>
+  <h1>判定のしくみ</h1>
+  <p class="lead">いつ・何を・いくつ発注すべきかを、どう計算しているか。</p>
+  <div class="meta">欠品 / 発注漏れ / 過剰在庫 / 在庫精度（棚卸差異）を、在庫数と出荷実績から自動で判定するシステム</div>
+</div>
+
+<h2>1. 在庫はこう動く</h2>
+<p>
+  在庫は、出荷のぶんだけ毎日減り、入荷でまた増えます。このノコギリの形のどこに今いるかで、
+  発注すべきかどうかが決まります。
+</p>
+<div class="fig">
+<svg viewBox="0 0 720 340" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
+  <defs>
+    <marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#0f172a"/>
+    </marker>
+  </defs>
+  <g font-size="9.4">
+    <!-- 軸 -->
+    <line x1="64" y1="40" x2="64" y2="258" stroke="#94a3b8"/>
+    <line x1="64" y1="258" x2="612" y2="258" stroke="#94a3b8" marker-end="url(#a2)"/>
+    <text x="30" y="46" fill="#64748b">在庫数</text>
+    <text x="596" y="274" fill="#64748b">日</text>
+
+    <!-- 3本の閾値（ラベルは枠内に収める） -->
+    <line x1="64" y1="67" x2="600" y2="67" stroke="#0277bd" stroke-width="1.2" stroke-dasharray="6 4"/>
+    <text x="606" y="64" fill="#0277bd" font-size="9" font-weight="700">適正在庫上限</text>
+    <text x="606" y="77" fill="#0277bd" font-size="8.2">超えると過剰在庫</text>
+
+    <line x1="64" y1="163" x2="600" y2="163" stroke="#f59e0b" stroke-width="1.6"/>
+    <text x="606" y="160" fill="#b45309" font-size="9" font-weight="700">発注点</text>
+    <text x="606" y="173" fill="#b45309" font-size="8.2">割ったら発注する</text>
+
+    <line x1="64" y1="221" x2="600" y2="221" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="3 3"/>
+    <text x="606" y="218" fill="#b91c1c" font-size="9" font-weight="700">安全在庫</text>
+    <text x="606" y="231" fill="#b91c1c" font-size="8.2">遅れに備える分</text>
+
+    <!-- 在庫の推移（のこぎり波） -->
+    <path d="M64,67 L397,225" fill="none" stroke="#0f172a" stroke-width="2.2"/>
+    <path d="M397,225 L397,67" fill="none" stroke="#059669" stroke-width="2.2"/>
+    <path d="M397,67 L600,163" fill="none" stroke="#0f172a" stroke-width="2.2"/>
+    <!-- 発注しなかった場合 -->
+    <path d="M397,225 L470,258" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5 4"/>
+    <circle cx="470" cy="258" r="4.5" fill="#dc2626"/>
+    <text x="410" y="250" fill="#b91c1c" font-size="9" font-weight="700">発注しなければ欠品</text>
+
+    <!-- 発注する日 -->
+    <line x1="267" y1="163" x2="267" y2="292" stroke="#b45309" stroke-width="1" stroke-dasharray="3 3"/>
+    <circle cx="267" cy="163" r="4.5" fill="#f59e0b" stroke="#fff"/>
+    <!-- 入荷 -->
+    <line x1="397" y1="225" x2="397" y2="292" stroke="#059669" stroke-width="1" stroke-dasharray="3 3"/>
+    <circle cx="397" cy="67" r="4.5" fill="#059669" stroke="#fff"/>
+    <text x="407" y="60" fill="#047857" font-size="9" font-weight="700">入荷して回復</text>
+
+    <!-- リードタイム区間 -->
+    <path d="M267,278 L267,284 L397,284 L397,278" fill="none" stroke="#475569"/>
+    <text x="332" y="298" text-anchor="middle" fill="#334155" font-size="9">
+      ② リードタイム（発注してから入荷するまで）
+    </text>
+    <text x="267" y="316" text-anchor="middle" fill="#b45309" font-size="9" font-weight="700">
+      ① 発注点を割る＝この日に発注
+    </text>
+    <text x="397" y="316" text-anchor="middle" fill="#047857" font-size="9" font-weight="700">③ 入荷</text>
+
+    <text x="76" y="86" fill="#475569" font-size="9">出荷のぶんだけ、毎日減っていく</text>
+    <text x="64" y="336" fill="#64748b" font-size="8.8">
+      発注点は「リードタイム中に売れる分 ＋ 安全在庫」。発注点を割った日に発注すれば、安全在庫に少し 食い込むだけで入荷が間に合う。
+    </text>
+  </g>
+</svg>
+
+  <div class="caption"><b>図3</b>　在庫の推移と3本の線。
+  <b>発注点</b>を割った日に発注すれば、リードタイム中に安全在庫を少し食うだけで入荷が間に合います。
+  発注しなければ赤い破線のとおり欠品します。</div>
+</div>
+
+<table>
+  <tr><th style="width:20%">線</th><th style="width:42%">意味</th><th>割ったら／超えたら</th></tr>
+  <tr><td><b>適正在庫上限</b></td><td>持ちすぎない上限。リードタイム＋安全在庫＋発注サイクル分</td>
+      <td>超えると <span class="badge" style="background:#0277bd;color:#ffffff">過剰在庫</span></td></tr>
+  <tr><td><b>発注点</b></td><td>リードタイム中に売れる分 ＋ 安全在庫</td>
+      <td>割ると <span class="badge" style="background:#f9a825;color:#000000">発注推奨</span></td></tr>
+  <tr><td><b>安全在庫</b></td><td>納期の遅れや急な注文に備える分</td>
+      <td>ここを割ると危険水域</td></tr>
+</table>
+</div>
+
+<div class="page">
+<h2>2. 計算式</h2>
+<pre>有効在庫       = (実棚在庫 があれば実棚 / 無ければ理論在庫) − 引当数
+在庫ポジション  = 有効在庫 + 発注残数        ← 発注判定はこの値で行う
+平均日次出庫    = 期間出庫数 ÷ 30日
+在庫日数       = 有効在庫 ÷ 平均日次出庫
+欠品予測日      = 今日 + 在庫日数
+安全在庫       = 平均日次出庫 × 安全在庫日数(既定7日)
+発注点         = 平均日次出庫 × リードタイム + 安全在庫
+適正在庫上限    = 平均日次出庫 × (リードタイム + 安全在庫日数 + 発注サイクル14日)
+発注推奨数      = 適正在庫上限まで戻す量を、MOQ と発注ロット単位に切り上げた数
+発注期限日      = 欠品予測日 − リードタイム</pre>
+
+<div class="note">
+  <b>なぜ「有効在庫＋発注残」で判定するのか。</b>
+  手元の在庫だけで見ると、発注済みの商品にも毎日「発注してください」と出続けます。
+  そうなるとアラート自体が信用されなくなり、本当に危ない行も見逃されます。
+</div>
+
+<h3>商品ごとに変えられる値</h3>
+<table>
+  <tr><th style="width:28%">項目</th><th>効き方</th></tr>
+  <tr><td>発注リードタイム日数</td><td><b>発注点計算の中核。</b>長いほど早めに発注点に当たる</td></tr>
+  <tr><td>安全在庫日数</td><td>空欄なら既定7日。切らしたくない商品は長くする</td></tr>
+  <tr><td>最小発注数(MOQ)</td><td>発注推奨数の下限</td></tr>
+  <tr><td>発注ロット単位</td><td>ケース入数など。発注推奨数はこの倍数に切り上がる</td></tr>
+</table>
+<p style="font-size:9.4pt;color:#475569">
+  全商品に共通の値（集計期間30日・既定の安全在庫日数7日・発注サイクル14日・滞留90日）は
+  「判定パラメータ」画面で変えられます。変えると全商品の判定がその場で計算し直されます。
+</p>
+</div>
+
+<div class="page">
+<h2>3. アラートは上から順に見る</h2>
+<p>
+  8つの条件を<b>重い順</b>に見て、最初に当たった1つだけを表示します。
+  だから1つの商品に2つのアラートが同時に付くことはありません。
+</p>
+<div class="fig"><svg viewBox="0 0 720 430" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
+<defs><marker id="a3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#cbd5e1"/></marker></defs>
+<g font-size="9.6">
+<rect x="0" y="8" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="23" font-size="8.6" fill="#94a3b8">条件 1</text>
+<text x="52" y="30" fill="#334155">有効在庫 ≦ 0</text>
+<line x1="396" y1="25" x2="424" y2="25" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="12" width="104" height="26" rx="4" fill="#b71c1c"/>
+<text x="482" y="29" text-anchor="middle" fill="#ffffff" font-weight="700">欠品</text>
+<rect x="548" y="12" width="96" height="26" rx="4" fill="#f4cccc"/>
+<text x="596" y="29" text-anchor="middle" fill="#990000" font-weight="700" font-size="9">優先度 A</text>
+<line x1="18" y1="42" x2="18" y2="54" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<text x="28" y="53" font-size="8.4" fill="#94a3b8">当たらなければ次の条件へ</text>
+<rect x="0" y="56" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="71" font-size="8.6" fill="#94a3b8">条件 2</text>
+<text x="52" y="78" fill="#334155">発注点割れ かつ 発注残0 かつ 発注期限を過ぎている</text>
+<line x1="396" y1="73" x2="424" y2="73" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="60" width="104" height="26" rx="4" fill="#d32f2f"/>
+<text x="482" y="77" text-anchor="middle" fill="#ffffff" font-weight="700">発注漏れ</text>
+<rect x="548" y="60" width="96" height="26" rx="4" fill="#f4cccc"/>
+<text x="596" y="77" text-anchor="middle" fill="#990000" font-weight="700" font-size="9">優先度 A</text>
+<line x1="18" y1="90" x2="18" y2="102" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<rect x="0" y="104" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="119" font-size="8.6" fill="#94a3b8">条件 3</text>
+<text x="52" y="126" fill="#334155">在庫日数 ≦ リードタイム</text>
+<line x1="396" y1="121" x2="424" y2="121" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="108" width="104" height="26" rx="4" fill="#ef6c00"/>
+<text x="482" y="125" text-anchor="middle" fill="#ffffff" font-weight="700">欠品リスク</text>
+<rect x="548" y="108" width="96" height="26" rx="4" fill="#f4cccc"/>
+<text x="596" y="125" text-anchor="middle" fill="#990000" font-weight="700" font-size="9">優先度 A</text>
+<line x1="18" y1="138" x2="18" y2="150" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<rect x="0" y="152" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="167" font-size="8.6" fill="#94a3b8">条件 4</text>
+<text x="52" y="174" fill="#334155">入荷予定日を過ぎても未入庫</text>
+<line x1="396" y1="169" x2="424" y2="169" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="156" width="104" height="26" rx="4" fill="#7b1fa2"/>
+<text x="482" y="173" text-anchor="middle" fill="#ffffff" font-weight="700">入荷遅延</text>
+<rect x="548" y="156" width="96" height="26" rx="4" fill="#ffedc2"/>
+<text x="596" y="173" text-anchor="middle" fill="#7f6000" font-weight="700" font-size="9">優先度 B</text>
+<line x1="18" y1="186" x2="18" y2="198" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<rect x="0" y="200" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="215" font-size="8.6" fill="#94a3b8">条件 5</text>
+<text x="52" y="222" fill="#334155">在庫ポジション ≦ 発注点</text>
+<line x1="396" y1="217" x2="424" y2="217" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="204" width="104" height="26" rx="4" fill="#f9a825"/>
+<text x="482" y="221" text-anchor="middle" fill="#000000" font-weight="700">発注推奨</text>
+<rect x="548" y="204" width="96" height="26" rx="4" fill="#ffedc2"/>
+<text x="596" y="221" text-anchor="middle" fill="#7f6000" font-weight="700" font-size="9">優先度 B</text>
+<line x1="18" y1="234" x2="18" y2="246" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<rect x="0" y="248" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="263" font-size="8.6" fill="#94a3b8">条件 6</text>
+<text x="52" y="270" fill="#334155">有効在庫 > 適正在庫上限</text>
+<line x1="396" y1="265" x2="424" y2="265" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="252" width="104" height="26" rx="4" fill="#0277bd"/>
+<text x="482" y="269" text-anchor="middle" fill="#ffffff" font-weight="700">過剰在庫</text>
+<rect x="548" y="252" width="96" height="26" rx="4" fill="#d8e6f4"/>
+<text x="596" y="269" text-anchor="middle" fill="#1c4587" font-weight="700" font-size="9">優先度 C</text>
+<line x1="18" y1="282" x2="18" y2="294" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<rect x="0" y="296" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="311" font-size="8.6" fill="#94a3b8">条件 7</text>
+<text x="52" y="318" fill="#334155">90日以上 出庫が無く、在庫がある</text>
+<line x1="396" y1="313" x2="424" y2="313" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="300" width="104" height="26" rx="4" fill="#455a64"/>
+<text x="482" y="317" text-anchor="middle" fill="#ffffff" font-weight="700">滞留在庫</text>
+<rect x="548" y="300" width="96" height="26" rx="4" fill="#d8e6f4"/>
+<text x="596" y="317" text-anchor="middle" fill="#1c4587" font-weight="700" font-size="9">優先度 C</text>
+<line x1="18" y1="330" x2="18" y2="342" stroke="#cbd5e1" stroke-width="1.2" marker-end="url(#a3)"/>
+<rect x="0" y="344" width="392" height="34" rx="5" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="14" y="359" font-size="8.6" fill="#94a3b8">条件 8</text>
+<text x="52" y="366" fill="#334155">実棚在庫 ≠ 理論在庫</text>
+<line x1="396" y1="361" x2="424" y2="361" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a3)"/>
+<rect x="430" y="348" width="104" height="26" rx="4" fill="#5d4037"/>
+<text x="482" y="365" text-anchor="middle" fill="#ffffff" font-weight="700">棚卸差異</text>
+<rect x="548" y="348" width="96" height="26" rx="4" fill="#d8e6f4"/>
+<text x="596" y="365" text-anchor="middle" fill="#1c4587" font-weight="700" font-size="9">優先度 C</text>
+<rect x="0" y="392" width="392" height="30" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="4 3"/>
+<text x="14" y="412" fill="#64748b">どれにも当たらない</text>
+<rect x="430" y="394" width="104" height="26" rx="4" fill="#e8f5e9"/>
+<text x="482" y="411" text-anchor="middle" fill="#1b5e20" font-weight="700">正常</text>
+</g></svg>
+  <div class="caption"><b>図4</b>　判定の順序。上ほど緊急度が高く、当たらなければ次の条件に進みます。</div>
+</div>
+
+<h2>4. 優先度の意味</h2>
+<table>
+  <tr><th style="width:18%" class="c">優先度</th><th style="width:30%">意味</th><th>いつ見るか</th></tr>
+  <tr><td class="c"><span class="badge" style="background:#f4cccc;color:#990000">A:即日対応</span></td>
+      <td>今日中に手を打たないと欠品する</td><td>毎朝いちばんに。HOMEの要対応リスト</td></tr>
+  <tr><td class="c"><span class="badge" style="background:#ffedc2;color:#7f6000">B:3日以内</span></td>
+      <td>3日以内に発注すれば間に合う</td><td>毎朝。Aを片付けた後</td></tr>
+  <tr><td class="c"><span class="badge" style="background:#d8e6f4;color:#1c4587">C:要確認</span></td>
+      <td>すぐ欠品はしないが、在庫が傷んでいる</td><td>週に1回まとめて</td></tr>
+</table>
+</div>
+
+</body></html>

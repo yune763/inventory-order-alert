@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>在庫・発注アラート 05 商品とマスタの管理</title>
+<style>:root { --accent: #7c3aed; }
+@page { size: A4; margin: 14mm 13mm 15mm; }
+* { box-sizing: border-box; }
+body {
+  font-family: "Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  color:#1e293b; font-size:10.2pt; line-height:1.75; margin:0;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+.page { page-break-after:always; }
+.page:last-child { page-break-after:auto; }
+
+.cover { border-top:6px solid var(--accent); padding-top:14px; margin-bottom:18px; }
+.eyebrow { font-size:9pt; color:var(--accent); font-weight:700; letter-spacing:.08em; }
+h1 { font-size:20pt; margin:2px 0 6px; letter-spacing:.01em; }
+.lead { color:#475569; font-size:10.5pt; margin:0 0 4px; }
+.meta { margin-top:10px; font-size:8.6pt; color:#94a3b8; }
+
+h2 { font-size:13.5pt; margin:22px 0 10px; padding:6px 0 6px 12px;
+     border-left:5px solid var(--accent); background:linear-gradient(90deg,#f1f5f9,rgba(255,255,255,0)); }
+.page > h2:first-child { margin-top:0; }
+h3 { font-size:11pt; margin:16px 0 6px; color:#0f172a; }
+p { margin:0 0 9px; }
+ul,ol { margin:0 0 10px; padding-left:1.3em; }
+li { margin-bottom:3px; }
+
+table { border-collapse:collapse; width:100%; margin:8px 0 14px; font-size:9.1pt; }
+th,td { border:1px solid #e2e8f0; padding:5px 8px; text-align:left; vertical-align:top; }
+th { background:#f1f5f9; font-weight:700; color:#334155; }
+td.c,th.c { text-align:center; } td.r,th.r { text-align:right; }
+tbody tr:nth-child(even) { background:#fafbfc; }
+
+code { font-family:"SF Mono",Menlo,monospace; font-size:8.8pt; background:#f1f5f9;
+       padding:1px 5px; border-radius:3px; color:#0f172a; }
+pre { background:#0f172a; color:#e2e8f0; padding:10px 13px; border-radius:5px;
+      font-family:"SF Mono",Menlo,monospace; font-size:8.6pt; line-height:1.65; overflow:hidden;
+      margin:8px 0 14px; white-space:pre-wrap; }
+
+.note { border:1px solid #fcd34d; background:#fffbeb; border-left:4px solid #f59e0b;
+        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+.note b { color:#92400e; }
+.tip  { border:1px solid #bae6fd; background:#f0f9ff; border-left:4px solid #0284c7;
+        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+.warn { border:1px solid #fecaca; background:#fef2f2; border-left:4px solid #dc2626;
+        padding:9px 13px; margin:12px 0; font-size:9.3pt; }
+
+.fig { margin:14px 0 18px; }
+.fig svg { width:100%; height:auto; display:block; }
+.caption { font-size:8.8pt; color:#64748b; margin-top:5px; }
+.caption b { color:#334155; }
+
+.badge { display:inline-block; border-radius:3px; padding:1px 6px; font-size:8.6pt; font-weight:700; }
+.steps { counter-reset:step; list-style:none; padding:0; margin:10px 0 14px; }
+.steps > li { counter-increment:step; position:relative; padding-left:30px; margin-bottom:9px; }
+.steps > li::before {
+  content:counter(step); position:absolute; left:0; top:1px;
+  width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff;
+  font-size:9pt; font-weight:700; text-align:center; line-height:20px;
+}
+.cols { display:flex; gap:14px; }
+.cols > * { flex:1; }
+.footer { position:fixed; bottom:-9mm; left:0; right:0; font-size:8pt; color:#94a3b8;
+          display:flex; justify-content:space-between; }
+</style>
+</head><body>
+<div class="footer"><span>在庫・発注アラート — 商品とマスタの管理</span><span>05</span></div>
+
+<div class="page">
+<div class="cover">
+  <div class="eyebrow">在庫・発注アラート　05</div>
+  <h1>商品とマスタの管理</h1>
+  <p class="lead">商品の登録（品番の採番）と、仕入先・保管場所・出荷先の管理。</p>
+  <div class="meta">欠品 / 発注漏れ / 過剰在庫 / 在庫精度（棚卸差異）を、在庫数と出荷実績から自動で判定するシステム</div>
+</div>
+
+<h2>1. 商品を追加する</h2>
+<ol class="steps">
+  <li>「在庫一覧」→ 右上の<b>「商品を追加」</b></li>
+  <li><b>カテゴリを選んでから「採番」を押す</b>と、品番（商品コード）が自動で入ります。
+      手で入れてもかまいません。</li>
+  <li>商品名・単位・保管場所・仕入先を入れます。仕入先名を選ぶと<b>仕入先コードも一緒に入ります</b>。</li>
+  <li><b>発注リードタイム日数</b>を必ず入れます。ここが発注点計算の中核で、空欄だと発注判定が働きません。</li>
+  <li>理論在庫数・引当数・期間出庫数などを入れて「保存する」。</li>
+</ol>
+
+<h2>2. 品番（商品コード）の採番</h2>
+<div class="fig">
+<svg viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg" font-family="Hiragino Sans, sans-serif">
+  <defs><marker id="a6" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+    <path d="M0,0 L7,3 L0,6 z" fill="#94a3b8"/></marker></defs>
+  <g font-size="9.6">
+    <rect x="0" y="40" width="150" height="56" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="75" y="62" text-anchor="middle" fill="#334155">① カテゴリを選ぶ</text>
+    <text x="75" y="80" text-anchor="middle" fill="#0f172a" font-weight="700">空調機器</text>
+
+    <rect x="186" y="26" width="196" height="84" rx="6" fill="#f5f3ff" stroke="#7c3aed"/>
+    <text x="284" y="46" text-anchor="middle" fill="#6d28d9" font-weight="700">② 採番ルールを探す</text>
+    <text x="198" y="66" fill="#334155" font-size="9">カテゴリ専用のルールがあれば それ</text>
+    <text x="198" y="81" fill="#334155" font-size="9">無ければ カテゴリ空欄の既定ルール</text>
+    <text x="198" y="99" fill="#0f172a" font-size="9">接頭辞 AC ／ 区切り - ／ 4桁 ／ 次の番号 1</text>
+
+    <rect x="418" y="40" width="150" height="56" rx="6" fill="#ecfdf5" stroke="#059669"/>
+    <text x="493" y="62" text-anchor="middle" fill="#047857" font-weight="700">③ 発番</text>
+    <text x="493" y="84" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="700">AC-0001</text>
+
+    <rect x="604" y="40" width="116" height="56" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+    <text x="662" y="60" text-anchor="middle" fill="#334155" font-size="9">④ 次の番号が</text>
+    <text x="662" y="76" text-anchor="middle" fill="#334155" font-size="9">2 に進む</text>
+    <text x="662" y="90" text-anchor="middle" fill="#94a3b8" font-size="8.4">（押した時点で確保）</text>
+
+    <g stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a6)" fill="none">
+      <path d="M150,68 L182,68"/>
+      <path d="M382,68 L414,68"/>
+      <path d="M568,68 L600,68"/>
+    </g>
+
+    <rect x="0" y="130" width="720" height="34" rx="5" fill="#fffbeb" stroke="#fcd34d"/>
+    <text x="14" y="151" fill="#92400e" font-size="9.2">
+      すでに使われている番号（旧シートから取り込んだコードなど）に当たった場合は、空いている番号まで自動で進みます。
+    </text>
+    <text x="0" y="186" fill="#64748b" font-size="9">
+      押した時点で番号を確保するため、登録をやめると欠番になります（二人が同時に登録して同じ番号が出るのを防ぐ作りです）。
+    </text>
+  </g>
+</svg>
+
+  <div class="caption"><b>図9</b>　採番の流れ。ルールは「マスタ」画面のカテゴリごとに設定できます。</div>
+</div>
+
+<table>
+  <tr><th style="width:18%">設定項目</th><th style="width:22%">例</th><th>意味</th></tr>
+  <tr><td>カテゴリ</td><td>空調機器／（空欄）</td><td>空欄の行が既定ルール。専用ルールが無いカテゴリで使われる</td></tr>
+  <tr><td>接頭辞</td><td>AC</td><td>品番の先頭に付く文字</td></tr>
+  <tr><td>区切り</td><td>-</td><td>接頭辞と連番のあいだの文字。不要なら空欄</td></tr>
+  <tr><td>桁数</td><td>4</td><td>連番の桁数。4なら 0001</td></tr>
+  <tr><td>次の番号</td><td>1</td><td>次に発番する番号。途中から始めたいときはここを変える</td></tr>
+</table>
+<p style="font-size:9.4pt;color:#475569">
+  入力しながら「次に出る品番」がその場に表示されるので、保存前に確かめられます。
+</p>
+
+<div class="note">
+  <b>商品コードは後から変えないでください。</b>
+  CSV取込の名寄せキーであり、入出庫の履歴もこのコードで結び付いています。
+  変えると、旧シートや他システムとの突き合わせができなくなります。
+</div>
+</div>
+
+<div class="page">
+<h2>3. 仕入先・保管場所・出荷先</h2>
+<p>
+  それぞれ専用ページがあり、<b>一覧＋右上の「＋ 新規登録」</b>という同じ作りです。
+  行ごとの「編集」を押したときだけ入力欄に変わります。
+</p>
+
+<table>
+  <tr><th style="width:18%">画面</th><th style="width:34%">持っている項目</th><th>どこで使われるか</th></tr>
+  <tr><td><b>仕入先</b></td><td>名前 / 仕入先コード / 並び順 / 表示</td>
+      <td>商品編集の仕入先名の候補（選ぶとコードも入る）。入庫元の候補</td></tr>
+  <tr><td><b>保管場所</b></td><td>名前 / 並び順 / 表示</td>
+      <td>商品編集の保管場所の候補。在庫一覧の絞り込み</td></tr>
+  <tr><td><b>出荷先</b></td><td>名前 / コード / 区分 / 住所 / 担当者 / 電話 / 備考</td>
+      <td>出庫を登録するときの選択肢。出荷先別の実績集計</td></tr>
+</table>
+
+<div class="warn">
+  <b>使われているものは削除できません。</b>
+  仕入先・保管場所は「その値を使っている商品が何件あるか」、出荷先は「出庫実績が何件あるか」を
+  一覧に出しています。0件のものだけ削除でき、使用中のものは<b>「非表示」に切り替えて</b>運用から外します。
+  消してしまうと、その商品や出庫の相手先が宙に浮いた文字列として残ってしまうためです。
+</div>
+
+<h3>「マスタ」画面に残っているもの</h3>
+<table>
+  <tr><th style="width:24%">項目</th><th>内容</th></tr>
+  <tr><td>対応状況</td><td>人が選ぶ列。<b>ここに無い値は選べません</b>（表記ゆれが絞り込みを壊すため）。色も指定できる</td></tr>
+  <tr><td>カテゴリ</td><td>商品の分類。候補として出るだけで、マスタ外の値も入力できる</td></tr>
+  <tr><td>単位</td><td>台・箱・本 など</td></tr>
+  <tr><td>品番の採番ルール</td><td>上記の採番設定</td></tr>
+</table>
+</div>
+
+<div class="page">
+<h2>4. 判定パラメータ</h2>
+<p>
+  全商品に共通で効く設定です。変えると<b>その場で全商品の判定が計算し直されます</b>（保存済みの判定を
+  書き換えるのではなく、毎回この値で計算しているためです）。
+</p>
+
+<table>
+  <tr><th style="width:26%">項目</th><th style="width:10%" class="c">既定</th>
+      <th style="width:32%">大きくすると</th><th>小さくすると</th></tr>
+  <tr><td>消化傾向の集計期間</td><td class="c">30日</td>
+      <td>判定が安定するが、需要の変化に鈍くなる</td><td>季節変動に追従するが、数字がブレやすい</td></tr>
+  <tr><td>安全在庫日数（既定値）</td><td class="c">7日</td>
+      <td>欠品しにくくなるが、在庫が増える</td><td>在庫は減るが、欠品リスクが上がる</td></tr>
+  <tr><td>発注サイクル</td><td class="c">14日</td>
+      <td>発注回数は減るが、1回の量と在庫が増える</td><td>こまめな発注になり、事務負荷が上がる</td></tr>
+  <tr><td>滞留とみなす日数</td><td class="c">90日</td>
+      <td>滞留の警告が出にくくなる</td><td>季節商品が滞留扱いされやすい</td></tr>
+  <tr><td>棚卸差異を見逃す範囲</td><td class="c">0</td>
+      <td>小さなズレを無視できる</td><td>1個のズレも棚卸差異として出る</td></tr>
+</table>
+
+<div class="tip">
+  <b>いじる順番。</b>まずは既定のまま1か月運用し、「欠品が出た商品は安全在庫日数を延ばす」
+  「毎週同じ商品で発注推奨が出て事務が重い場合は発注サイクルを延ばす」というように、
+  実績を見てから1つずつ動かすのが安全です。
+</div>
+
+<h3>商品ごとに上書きできる値</h3>
+<p>
+  安全在庫日数は商品ごとに設定でき、入っていればそちらが優先されます（空欄なら上の既定値）。
+  切らすと現場が止まる商品だけ長めにする、といった使い分けができます。
+</p>
+</div>
+
+</body></html>
