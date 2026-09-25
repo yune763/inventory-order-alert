@@ -55,7 +55,7 @@ export default async function DashboardPage() {
 
       <section className="grid gap-3 lg:grid-cols-3">
         <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <p className="text-xs text-slate-500">在庫金額（有効在庫 × 仕入単価）</p>
+          <p className="text-xs text-slate-500">在庫金額</p>
           <p className="mt-1 text-2xl font-bold tabular-nums">{fmtMoney(summary.stockValue)}</p>
         </div>
         <div className="rounded-lg border border-slate-200 bg-white p-4">

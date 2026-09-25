@@ -30,7 +30,6 @@ export default async function DestinationsPage() {
       <section className="rounded-lg border border-slate-200 bg-white p-4">
         <h2 className="text-sm font-semibold">
           直近{settings.demand_window_days}日の出荷実績
-          <span className="ml-2 text-xs font-normal text-slate-500">金額は販売単価ベース</span>
         </h2>
         {summary.length === 0 ? (
           <p className="py-4 text-center text-sm text-slate-500">この期間の出庫はまだありません。</p>

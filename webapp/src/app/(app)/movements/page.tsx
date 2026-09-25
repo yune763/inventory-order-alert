@@ -99,7 +99,7 @@ export default async function MovementsPage(props: PageProps<"/movements">) {
                   <th className="px-3 py-1.5 font-medium">出荷先</th>
                   <th className="px-3 py-1.5 text-right font-medium">出庫数</th>
                   <th className="px-3 py-1.5 text-right font-medium">件数</th>
-                  <th className="px-3 py-1.5 text-right font-medium">販売単価ベースの金額</th>
+                  <th className="px-3 py-1.5 text-right font-medium">金額</th>
                   <th className="px-3 py-1.5" />
                 </tr>
               </thead>
