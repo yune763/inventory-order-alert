@@ -1,0 +1,48 @@
+# Render の無料プランは15分アクセスが無いとスリープし、次に開く人が30秒ほど待たされる。
+# それを避けるため、10分おきに /api/healthz を叩いて起こしておく。
+#
+# /api/healthz は Basic 認証の対象外・DBにも触らないので、この用途にだけ使える軽い入口。
+#
+# ── 止めたいとき ─────────────────────────────────────────────
+#   このファイルを消すか、GitHub の Actions タブ →「Keep awake」→ Disable workflow
+#
+# ── 気をつける点 ─────────────────────────────────────────────
+#   * Render の無料枠は「アカウント全体で月750時間」。24時間起こし続けると1サービスで
+#     約730時間を使う。他にも無料サービスを動かしているなら上限に当たる可能性がある。
+#     業務時間だけにするなら、下の schedule を平日の日中だけに差し替える（コメント参照）
+#   * GitHub の定時実行は時間どおりには動かない（数分〜十数分ずれることがある）
+#   * リポジトリに60日間コミットが無いと、定時実行は自動で止まる。
+#     その場合は Actions タブから手動で有効に戻す
+
+name: Keep awake
+
+on:
+  schedule:
+    # 10分おき（UTC基準だが、毎時実行なので日本時間でも同じ間隔になる）
+    - cron: "*/10 * * * *"
+    # 業務時間だけにする場合はこちらに差し替える（日本時間 7:00〜21:59 / 平日）
+    # - cron: "*/10 22-23 * * 0-4"
+    # - cron: "*/10 0-12 * * 1-5"
+  workflow_dispatch: # Actions タブから手動でも叩ける
+
+# 同時に何本も走らせない（前回が詰まっていたら新しい方を優先する）
+concurrency:
+  group: keep-awake
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: /api/healthz を叩く
+        env:
+          # 公開URLを変えたときは、リポジトリの Settings → Variables に
+          # KEEPALIVE_URL を作れば、このファイルを直さなくてよい
+          URL: ${{ vars.KEEPALIVE_URL || 'https://inventory-order-alert.onrender.com' }}
+        run: |
+          # スリープからの復帰は30秒以上かかることがあるので、待ち時間を長めにとる。
+          # 1回目で起きなかった場合に備えて3回まで試す。
+          curl -fsS --max-time 90 --retry 3 --retry-delay 20 --retry-all-errors \
+            -o /dev/null -w "status=%{http_code} time=%{time_total}s\n" \
+            "$URL/api/healthz"
