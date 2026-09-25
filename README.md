@@ -168,14 +168,28 @@ git push -u origin main
 
 `https://<サービス名>.onrender.com` が公開URL。Basic認証のダイアログが出れば成功。
 
-### 5. データを移す
+### 5. サンプルデータを入れる（見せる用・任意）
 
-サンプル商品は本番には入らない（`supabase/seed/` は自動実行しない）。手元のデータを移すなら:
+Environment に `SEED_SAMPLE_DATA=true` を足して保存すると、次のデプロイで動作確認用の
+商品10件と入出庫6件が入る（9つのアラート区分が1件ずつ出るように組んだもの）。
+何度デプロイしても増えない。実データを入れる前のデモに使う。
+
+消すときは、環境変数を外したうえで画面から商品を削除するか、SQLで:
+
+```sql
+delete from inventory_movements m using inventory_items i
+ where m.item_id = i.id and i.code like 'DEMO-%';
+delete from inventory_items where code like 'DEMO-%';
+```
+
+### 6. 実データを移す
+
+`SEED_SAMPLE_DATA` を入れなければ商品は0件で立ち上がる。手元のデータを移すなら:
 
 1. ローカルの「取込・書き出し」→ 全商品をCSVで書き出す／入出庫をCSVで書き出す
 2. 公開先の「取込・書き出し」で、商品CSV → 入出庫CSV の順に取り込む
 
-### 6. 日次アラートを自動で送る（任意）
+### 7. 日次アラートを自動で送る（任意）
 
 Render の **New → Cron Job** で、毎朝この1行を実行する。
 
@@ -185,7 +199,11 @@ curl -fsS "https://<サービス名>.onrender.com/api/alerts/daily?token=$ALERT_
 
 ### 気をつける点
 
-- **無料プランはスリープする。** 15分アクセスが無いと停止し、次に開くとき30秒ほどかかる
+- **無料プランはスリープする。** 15分アクセスが無いと停止し、次に開くとき30秒ほどかかる。
+  `.github/workflows/keep-awake.yml` が10分おきに `/api/healthz` を叩いて起こし続けている
+  （止めるときはこのファイルを消すか、GitHub の Actions タブで Disable）。
+  ただし Render の無料枠は**アカウント全体で月750時間**なので、24時間起こし続けると
+  1サービスでほぼ使い切る。他にも無料サービスを動かしているなら、業務時間だけに絞ること
 - **無料Postgresには期限・容量の制限がある。** 実運用に載せる前に、現在のプラン条件を
   Render のダッシュボードで確認すること（期限切れでDBごと消える設定になっていないか）
 - **ローカルDB（`webapp/.pglite/`）は公開先では使わない。** Render のファイルは再デプロイで

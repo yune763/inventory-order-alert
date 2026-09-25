@@ -1,6 +1,7 @@
 /**
  * DBの用意と点検をするコマンド。
  *
+ *   node scripts/db.mjs deploy    migrate ＋（SEED_SAMPLE_DATA=true のときだけ）seed
  *   node scripts/db.mjs migrate   テーブル・判定ビュー・マスタ初期値を作る
  *   node scripts/db.mjs seed      動作確認用のサンプル商品9件を入れる
  *   node scripts/db.mjs check     判定結果を表で出す（9区分が出そろうか確認する）
@@ -147,13 +148,23 @@ try {
     case "check":
       await check(db);
       break;
+    case "deploy":
+      // 公開先の起動前に走らせる用。マイグレーションは毎回、
+      // サンプル投入は SEED_SAMPLE_DATA を入れたときだけ。
+      // どちらも何度流しても結果が変わらない書き方にしてある。
+      await migrate(db);
+      if (/^(1|true|yes|on)$/i.test(process.env.SEED_SAMPLE_DATA ?? "")) {
+        console.log("SEED_SAMPLE_DATA が設定されているので、サンプルデータも入れます");
+        await seed(db);
+      }
+      break;
     case "reset":
       await migrate(db);
       await seed(db);
       await check(db);
       break;
     default:
-      console.error(`不明なコマンド: ${command}（migrate / seed / check / reset）`);
+      console.error(`不明なコマンド: ${command}（deploy / migrate / seed / check / reset）`);
       process.exit(1);
   }
   console.log("完了");
