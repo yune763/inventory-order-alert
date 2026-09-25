@@ -1,0 +1,14 @@
+# 依存関係とビルド成果物（webapp/.gitignore が主。ここは取りこぼし防止）
+node_modules/
+.next/
+
+# ローカルDBの実体。公開先では Postgres を使うので持ち込まない
+webapp/.pglite/
+
+# 環境変数
+.env
+.env.*
+!.env.local.example
+
+# macOS
+.DS_Store

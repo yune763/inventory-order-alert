@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), "Hiragino Sans", "Noto Sans JP", Meiryo, sans-serif;
+}
+
+/* 一覧表：左3列（対応状況・商品コード・商品名）を貼り付けたまま横スクロールさせる。
+   スプレッドシートの setFrozenColumns(3) と同じ見え方にするため。 */
+.sticky-col {
+  position: sticky;
+  background: inherit;
+}

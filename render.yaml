@@ -1,0 +1,62 @@
+# Render（https://render.com）へ公開するための設定。
+# ダッシュボードの New → Blueprint でこのリポジトリを選ぶと、この内容で作られる。
+#
+# ここに書いていない値（Basic認証のID・パスワードなど）は sync: false にしてあり、
+# Render の Environment 画面から入れる。
+#
+# 注意: このアプリは既定だとサーバーのファイル（webapp/.pglite）にデータを置く。
+# Render のファイルは再デプロイのたびに消えるため、公開時は必ず下の Postgres を使う
+# （DATABASE_URL が入っていれば、そちらを見る作りになっている）。
+
+services:
+  - type: web
+    name: inventory-order-alert
+    runtime: node
+    plan: free                  # 無料枠。15分アクセスが無いとスリープし、次の表示が遅くなる
+    region: singapore           # 日本から近い場所。DBと必ず揃える
+    rootDir: webapp             # リポジトリ直下ではなく webapp/ でコマンドを動かす
+    buildCommand: npm ci && npm run build
+    # 起動前にマイグレーション（テーブル・判定ビュー・マスタ初期値）を流す。
+    # 何度流しても同じ結果になるように書いてあるので、デプロイのたびに実行してよい。
+    startCommand: npm run start:deploy
+    healthCheckPath: /api/healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+
+      # ── データの置き場所 ──────────────────────────────
+      - key: DATABASE_URL
+        fromDatabase:
+          name: inventory-order-alert-db
+          property: connectionString
+
+      # ── URLを開いたときのID・パスワード ───────────────
+      # 画面内のログインが無いので、ここを空にすると誰でも中身が見える
+      - key: BASIC_AUTH_USER
+        sync: false
+      - key: BASIC_AUTH_PASSWORD
+        sync: false
+
+      # ── 日次アラート（任意）──────────────────────────
+      # 設定しない限り /api/alerts/daily は 503 を返す
+      - key: ALERT_API_TOKEN
+        generateValue: true
+      - key: RESEND_API_KEY
+        sync: false
+      - key: ALERT_MAIL_TO
+        sync: false
+      - key: ALERT_MAIL_FROM
+        sync: false
+
+      # ── 画面 ────────────────────────────────────────
+      # 日次アラートの本文に載せるリンク先。公開URLが決まってから入れる
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+
+databases:
+  - name: inventory-order-alert-db
+    databaseName: inventory
+    user: inventory
+    plan: free                  # 無料プランには期限・容量の制限がある。実運用前に要確認
+    region: singapore           # Webサービスと同じリージョンにする（内部接続が使えて速い）
